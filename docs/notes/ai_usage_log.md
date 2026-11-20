@@ -19,3 +19,8 @@
   - *Phát hiện:* Khi viết test số 9 (`Fall off Island & Respawn`), script test giữ nguyên `move: [1, 0]` suốt 150 tick khiến nhân vật sau khi chờ 60 tick và hồi sinh tại `(0,0,0)` tiếp tục đi thêm 27 tick (`2.7 m`), làm trượt assert `pos[0] === 0`.
   - *Khắc phục:* Sửa input trong test dừng di chuyển sau khi sự kiện `player_hit (by: fall)` nổ ra để kiểm chứng chính xác vị trí hồi sinh `(0,0,0)` và trạng thái bất tử `90 tick`.
   - *Cải tiến Harness:* Bổ sung skill `.agents/skills/verify-contract/SKILL.md` và cập nhật `AGENTS.md` với quy trình 12 bước tick bắt buộc của Contract v1.1.
+
+## Phase 3 (Ticket-03, Contract v1.2)
+- Model: Claude Sonnet 5.5 (via Antigravity). Est. ~70k tokens (~$0.05). Saved tokens by editing only the touched engine sections and reusing the single shared engine for headless + browser.
+- AI mistakes found by self-review: (1) an edit dropped the closing braces of the scenario shades loop (syntax break) - caught by re-reading the file and fixed before running; (2) an edit removed `invuln:` from the snapshot and a colour line in the UI - caught by diff review and restored; (3) my first refuel test assumed a lit lantern stays full between ticks - wrong because decay runs before interaction; test corrected and the behaviour documented in ADR-0001.
+- Harness change: AGENTS.md now lists the v1.2 deltas and the rule 'never skip a test, remove with reason'; verify-contract skill updated to 17 checks.

@@ -1,4 +1,15 @@
-# AI Agents & Harness Guidelines: Đảo Đèn Lồng (Contract v1.1 - Phase 2)
+# AI Agents & Harness Guidelines: Đảo Đèn Lồng (Contract v1.2 - Phase 3)
+
+## Contract v1.2 deltas (Ticket-03, supersede v1.1 where they conflict; see docs/adr/0001-*.md)
+- Lantern = `{lit, fuel, deposited, ever_lit, relit_count}`; fuel kept as integer 1/60 units (`fuel_u`), never floats. Max 100, decay 1/s, drain 5/s per `drain` Shade.
+- Step 2 also subtracts fuel; right after it lanterns with fuel <= 0 go out (`lantern_out`). Safe zone only when lit AND fuel >= 30.
+- Interact: nearest receivable lantern (unlit, or lit with fuel < 100). Unlit cost = 10 (first) / 5 (`ever_lit`). Lit -> `refuel`.
+- NO early win. At dawn: alive and lit >= ceil(0.6 * total) -> `dawn_survived`; flames 0 -> `no_flames` always first. Nights 240/270/300 s.
+- Capacity = min(20, 10 + 2 * successful_lights). Score formula is in `game.contract.json` (`tuning.score`) — never hard-code numbers in the engine.
+- When a rule changes: update ADR + CHANGELOG, then fix or remove the old test WITH a written reason. Never `skip` a test.
+
+# (v1.1 base rules below)
+
 
 ## Build, Run & Test Commands
 - **Install / Build:** `npm install`

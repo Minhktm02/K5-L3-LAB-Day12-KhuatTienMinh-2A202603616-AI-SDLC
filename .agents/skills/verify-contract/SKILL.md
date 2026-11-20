@@ -12,9 +12,9 @@ Use this skill after any change to `src/gameEngine.js`, `src/headless.js`, or `g
    ```bash
    npm test
    ```
-2. Verify that all 10 checks pass:
-   - Determinism check (identical SHA/content across repeated runs with same seed).
-   - Phase 1 regression scenarios (mote pickup, lantern deposit & win with v1.1 numbers).
-   - Phase 2 feature scenarios (Dash, Gió Lạc steal & drop, Bùa Gió, Đảo Cau jump pads, Đảo Chuông 3-tier & wind, Pause/Resume, Fall & Respawn).
+2. Verify that all 17 checks pass (Contract v1.2):
+   - Determinism, Phase 1/2 regressions (pickup, dash, drifter, charm, jump pads, pause, fall).
+   - Phase 3: fuel decay / `lantern_out` / relight / refuel / safe-zone boundary (fuel == 30) / Shade `drain` / pulse scoring (+5 vs +15) / dawn win thresholds (3/5, 4/6, 5/7) / no early win / `no_flames` beats dawn / capacity growth.
    - Full Night 3 (21,600 ticks) headless benchmark (`<= 30,000 ms`).
-3. Ensure raw `.jsonl` proof files in `docs/proof/phase-2/` are up to date and committed with the phase tag.
+3. Ensure raw `.jsonl` proof files in `docs/proof/phase-3/` are regenerated and committed with the phase tag.
+4. If a test fails because a RULE changed, update `docs/adr/` + `CHANGELOG.md` and fix/remove the test with a reason; never skip it.

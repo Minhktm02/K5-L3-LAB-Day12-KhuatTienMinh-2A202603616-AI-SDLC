@@ -33,6 +33,18 @@
       user-select: none;
     }
 
+    /* Colour-blind friendly palette (Ticket-03 §6) */
+    body.colorblind {
+      --col-danger: #FFFFFF;
+      --col-shade-edge: #00B3FF;
+    }
+    #mote-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--col-core);
+      text-align: center;
+    }
+
     body, html {
       margin: 0;
       padding: 0;
@@ -400,6 +412,7 @@
       <div id="interact-prompt" class="hidden">E — Nạp ánh sáng (0/10)</div>
       <div class="hud-panel" style="padding: 8px 12px;">
         <div id="mote-bar"></div>
+        <div id="mote-count">0 / 10</div>
       </div>
     </div>
 
@@ -479,6 +492,10 @@
         <span>Độ nhạy chuột (<span id="val-sens">1.0</span>x):</span>
         <input type="range" id="input-sens" min="0.2" max="2.5" step="0.1" value="1.0">
       </div>
+      <div class="setting-row">
+        <span>Bảng màu dễ phân biệt (mù màu):</span>
+        <input type="checkbox" id="input-colorblind">
+      </div>
       <div class="btn-row">
         <button class="btn" id="btn-close-settings">LƯU & ĐÓNG</button>
       </div>
@@ -501,14 +518,18 @@
   <script>
     // --- Persistent Settings ---
     const SETTINGS_KEY = 'dao_den_long_settings_v1';
-    let userSettings = { volume: 0.7, sensitivity: 1.0 };
+    let userSettings = { volume: 0.7, sensitivity: 1.0, colorblind: false };
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
       if (saved) {
         if (typeof saved.volume === 'number') userSettings.volume = saved.volume;
         if (typeof saved.sensitivity === 'number') userSettings.sensitivity = saved.sensitivity;
+        if (typeof saved.colorblind === 'boolean') userSettings.colorblind = saved.colorblind;
       }
     } catch (e) {}
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.toggle('colorblind', userSettings.colorblind);
+    });
 
     function saveSettings() {
       try {
@@ -592,17 +613,17 @@
     const NIGHT_INFO = {
       1: {
         name: 'ĐÊM 1 — ĐẢO BẾN',
-        sub: '5 Đèn Lồng Lớn · Thời gian 300 giây',
-        story: 'Ông Đăng: "Đảo Bến là cửa ngõ của quần đảo. Hãy gom đủ 10 đom đóm cho mỗi chiếc trong 5 Đèn Lồng Lớn. Cẩn thận Bóng Mực trồi lên từ sương đen sau 5 giây đầu tiên!"'
+        sub: '5 Đèn Lồng Lớn · Giữ ≥ 3 đèn sáng tới bình minh · 240 giây',
+        story: 'Ông Đăng: "Đảo Bến là cửa ngõ của quần đảo. Đèn thắp rồi vẫn cạn dầu dần, cháu nhớ châm đom đóm để giữ đèn sáng tới bình minh. Cẩn thận Bóng Mực hút dầu những ngọn đèn yếu!"'
       },
       2: {
         name: 'ĐÊM 2 — ĐẢO CAU',
-        sub: '6 Đèn Lồng Lớn · Cầu Tre & Bục Nhảy · Thời gian 330 giây',
+        sub: '6 Đèn Lồng Lớn · Giữ ≥ 4 đèn sáng tới bình minh · 270 giây',
         story: 'Ông Đăng: "Đảo Cau gồm hai hòn đảo nối bằng chiếc cầu tre hẹp. Cháu có thể dùng Bục Nhảy để bay qua biển mây và nhặt Bùa Gió ở giữa cầu để lướt liên tục. Hãy coi chừng Gió Lạc cướp đom đóm khi cháu mang từ 5 đốm sáng trở lên!"'
       },
       3: {
         name: 'ĐÊM 3 — ĐẢO CHUÔNG',
-        sub: '7 Đèn Lồng Lớn · 3 Tầng Đảo & Gió Mạnh · Thời gian 360 giây',
+        sub: '7 Đèn Lồng Lớn · Giữ ≥ 5 đèn sáng tới bình minh · 300 giây',
         story: 'Ông Đăng: "Đảo Chuông có 3 tầng cao dần lên đỉnh Tháp Chuông. Hãy men theo hai con dốc lên tầng 1 và dùng bục nhảy để lên tầng 2. Mỗi 30 giây sẽ có một cơn gió mạnh thổi qua, hãy giữ vững bước chân để đón Bình Minh!"'
       }
     };
@@ -636,7 +657,7 @@
 
     // Build Mote Bar 10 slots
     const moteBarEl = document.getElementById('mote-bar');
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       const slot = document.createElement('div');
       slot.className = 'mote-slot';
       moteBarEl.appendChild(slot);
@@ -922,6 +943,30 @@
         core.position.y = 2.6;
         group.add(core);
 
+        // Torn-paper patch: visible only on unlit lanterns (shape cue that does not rely on colour)
+        const tear = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.35, 0.5),
+          new THREE.MeshBasicMaterial({ color: 0x0E1430, side: THREE.DoubleSide })
+        );
+        tear.position.set(0.32, 2.62, 0.4);
+        tear.rotation.z = 0.5;
+        group.add(tear);
+
+        // Fuel bar (background + fill), visible while the lantern is lit
+        const fuelBg = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.7, 0.2),
+          new THREE.MeshBasicMaterial({ color: 0x1B2350, side: THREE.DoubleSide })
+        );
+        fuelBg.position.y = 3.7;
+        group.add(fuelBg);
+        const fuelBar = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.6, 0.14),
+          new THREE.MeshBasicMaterial({ color: 0xFFB347, side: THREE.DoubleSide })
+        );
+        fuelBar.position.y = 3.7;
+        fuelBar.position.z = 0.01;
+        group.add(fuelBar);
+
         // Safe zone ring (6m)
         const safeRingGeo = new THREE.RingGeometry(5.85, 6.0, 48);
         const safeRingMat = new THREE.MeshBasicMaterial({ color: 0xFFB347, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
@@ -935,7 +980,7 @@
         group.add(light);
 
         scene.add(group);
-        lanternMeshes.push({ group, core, light, safeRing, data: l });
+        lanternMeshes.push({ group, core, light, safeRing, tear, fuelBg, fuelBar, data: l });
       });
 
       // Build Charm Meshes
@@ -1026,6 +1071,15 @@
         saveSettings();
       });
 
+      const cbBox = document.getElementById('input-colorblind');
+      cbBox.checked = userSettings.colorblind;
+      document.body.classList.toggle('colorblind', userSettings.colorblind);
+      cbBox.addEventListener('change', () => {
+        userSettings.colorblind = cbBox.checked;
+        document.body.classList.toggle('colorblind', userSettings.colorblind);
+        saveSettings();
+      });
+
       document.getElementById('btn-open-settings-menu').addEventListener('click', () => {
         settingsReturnTo = 'menu';
         document.getElementById('screen-menu').classList.add('hidden');
@@ -1071,7 +1125,7 @@
         if (currentNight < 3) {
           document.getElementById('res-title').textContent = `🎉 THẮNG ĐÊM ${currentNight}!`;
           document.getElementById('res-subtitle').textContent = `Điểm Đêm ${currentNight}: ${engine.score} · Tổng điểm: ${totalCampaignScore}`;
-          document.getElementById('res-desc').textContent = 'Ánh sáng ấm áp đã xua tan sương đen trên hòn đảo này. Hãy chuẩn bị bước sang hòn đảo tiếp theo!';
+          document.getElementById('res-desc').textContent = 'Bình minh lên và đảo vẫn sáng đèn. Ánh sáng ấm áp đã xua tan sương đen! Hãy chuẩn bị bước sang hòn đảo tiếp theo!';
           nextBtn.textContent = `SANG ĐÊM ${currentNight + 1}`;
           nextBtn.onclick = () => startNightIntro(currentNight + 1);
         } else {
@@ -1087,7 +1141,7 @@
         document.getElementById('res-subtitle').textContent = `Điểm đạt được: ${engine.score}`;
         document.getElementById('res-desc').textContent = engine.reason === 'no_flames'
           ? 'Ngọn lửa của Mây đã tắt hết trước sức ép của Bóng Mực. Đừng bỏ cuộc!'
-          : 'Bình minh đã tới khi các Đèn Lồng Lớn vẫn chưa được thắp sáng hết.';
+          : 'Bình minh đã tới nhưng số đèn còn sáng chưa đủ ngưỡng để giữ đảo.';
         nextBtn.textContent = `CHƠI LẠI ĐÊM ${currentNight}`;
         nextBtn.onclick = () => launchCurrentNight();
       }
@@ -1182,12 +1236,27 @@
 
       // Update Lanterns
       lanternMeshes.forEach(lm => {
+        const fuel = Math.max(0, lm.data.fuel_u) / 60;
+        const blinkOn = Math.floor(Date.now() / 500) % 2 === 0; // 1 Hz blink
+        const lowFuel = lm.data.lit && fuel < 30;
+        const visibleNow = !lowFuel || blinkOn;
+        lm.fuelBg.quaternion.copy(camera.quaternion);
+        lm.fuelBar.quaternion.copy(camera.quaternion);
+        lm.core.scale.set(1, lm.data.lit ? 1 : 0.8, 1); // unlit lanterns are 20% deflated
+        lm.tear.visible = !lm.data.lit;
+        lm.fuelBg.visible = lm.data.lit && visibleNow;
+        lm.fuelBar.visible = lm.data.lit && visibleNow;
         if (lm.data.lit) {
           lm.core.material.color.setHex(0xFFE9B0);
-          lm.light.intensity = 2.6;
-          lm.safeRing.material.opacity = 0.35;
+          lm.core.visible = visibleNow;
+          lm.light.intensity = visibleNow ? 2.6 : 0.8;
+          lm.safeRing.material.opacity = fuel >= 30 ? 0.35 : 0.0; // no safe zone below 30 fuel
+          const ratio = Math.min(1, fuel / 100);
+          lm.fuelBar.scale.x = Math.max(0.001, ratio);
+          lm.fuelBar.position.x = 0;
         } else {
           lm.core.material.color.setHex(0x5B5F6E);
+          lm.core.visible = true;
           lm.light.intensity = 0.15;
           lm.safeRing.material.opacity = 0.0;
         }
@@ -1228,6 +1297,7 @@
         const s = engine.shades[i];
         const sm = shadeMeshes[i];
         sm.group.position.set(s.pos[0], s.pos[1], s.pos[2]);
+        sm.body.material.emissive.setHex(userSettings.colorblind ? 0x00B3FF : 0x7A3CFF);
         if (s.state === 'stunned') {
           sm.body.material.color.setHex(0x3A3450);
           sm.body.material.emissiveIntensity = 0.05;
@@ -1275,7 +1345,7 @@
       const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
       const ss = String(totalSec % 60).padStart(2, '0');
       const clockEl = document.getElementById('ui-clock');
-      clockEl.textContent = `${mm}:${ss}`;
+      clockEl.textContent = (userSettings.colorblind && totalSec <= 30 ? '⚠ ' : '') + `${mm}:${ss}`;
       if (totalSec <= 30) clockEl.classList.add('danger');
       else clockEl.classList.remove('danger');
 
@@ -1295,15 +1365,19 @@
       document.getElementById('ui-status-banner').textContent = statusParts.join(' · ');
 
       // 3. Lanterns & Score
-      document.getElementById('ui-lanterns').textContent = `${litCount}/${totalLanterns}`;
+      const needLit = Math.ceil(0.6 * totalLanterns - 1e-9);
+      document.getElementById('ui-lanterns').textContent = `${litCount}/${totalLanterns} (cần ${needLit})`;
       document.getElementById('ui-score').textContent = engine.score;
 
       // 4. 10-slot Mote bar
       const slots = moteBarEl.children;
-      for (let i = 0; i < 10; i++) {
+      const capNow = engine.getCapacity();
+      for (let i = 0; i < 20; i++) {
+        slots[i].style.display = i < capNow ? 'flex' : 'none';
         if (i < engine.player.carried) slots[i].classList.add('filled');
         else slots[i].classList.remove('filled');
       }
+      document.getElementById('mote-count').textContent = `${engine.player.carried} / ${capNow}`;
 
       // 5. Cooldown icons
       const dashBox = document.getElementById('skill-dash');
@@ -1315,7 +1389,7 @@
       } else if (engine.player.dash_cd_ticks > 0) {
         dashBox.classList.add('disabled');
         dashCdEl.textContent = `${(engine.player.dash_cd_ticks / 60).toFixed(1)}s`;
-        dashCdEl.style.color = '#FF5A5F';
+        dashCdEl.style.color = userSettings.colorblind ? '#FFFFFF' : '#FF5A5F';
       } else {
         dashBox.classList.remove('disabled');
         dashCdEl.textContent = 'Sẵn sàng';
@@ -1327,7 +1401,7 @@
       if (engine.player.pulse_cd_ticks > 0) {
         pulseBox.classList.add('disabled');
         pulseCdEl.textContent = `${(engine.player.pulse_cd_ticks / 60).toFixed(1)}s`;
-        pulseCdEl.style.color = '#FF5A5F';
+        pulseCdEl.style.color = userSettings.colorblind ? '#FFFFFF' : '#FF5A5F';
       } else if (engine.player.carried < 3) {
         pulseBox.classList.add('disabled');
         pulseCdEl.textContent = 'Cần 3✨';
@@ -1352,8 +1426,23 @@
       }
 
       const promptEl = document.getElementById('interact-prompt');
-      if (nearestUnlit && nearestUnlitDist <= 2.0 && Math.abs(nearestUnlit.pos[1] - engine.player.pos[1]) <= 2.0) {
-        promptEl.textContent = `E — Nạp ánh sáng (${nearestUnlit.deposited}/10)`;
+      let recvTarget = null;
+      let recvDist = Infinity;
+      for (const l of engine.lanterns) {
+        if (l.lit && l.fuel_u >= engine.FUEL_MAX_U) continue;
+        const d = Math.hypot(l.pos[0] - engine.player.pos[0], l.pos[2] - engine.player.pos[2]);
+        if (d <= 2.0 && Math.abs(l.pos[1] - engine.player.pos[1]) <= 2.0 && d < recvDist) {
+          recvDist = d;
+          recvTarget = l;
+        }
+      }
+      if (recvTarget) {
+        if (recvTarget.lit) {
+          promptEl.textContent = `E — Châm dầu (${Math.floor(recvTarget.fuel_u / 60)}/100)`;
+        } else {
+          const cost = recvTarget.ever_lit ? contract.tuning.relight_cost : contract.tuning.lantern_cost;
+          promptEl.textContent = `E — Nạp ánh sáng (${recvTarget.deposited}/${cost})`;
+        }
         promptEl.classList.remove('hidden');
       } else {
         promptEl.classList.add('hidden');
