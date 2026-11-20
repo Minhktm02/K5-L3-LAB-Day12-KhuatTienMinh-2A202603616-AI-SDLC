@@ -703,18 +703,48 @@
       window.addEventListener('keyup', e => {
         keys[e.key.toLowerCase()] = false;
       });
-      window.addEventListener('mousedown', e => {
-        isMouseDown = true;
-        prevMouseX = e.clientX;
-      });
-      window.addEventListener('mouseup', () => { isMouseDown = false; });
-      window.addEventListener('mousemove', e => {
-        if (isMouseDown) {
-          const dx = e.clientX - prevMouseX;
-          camYaw -= dx * 0.35 * userSettings.sensitivity;
-          prevMouseX = e.clientX;
+    // Pointer Lock & Mouse Look
+    let isPointerLocked = false;
+    let camPitch = 20; // vertical angle in degrees
+
+    function requestGamePointerLock() {
+      const el = renderer.domElement;
+      if (document.pointerLockElement !== el) {
+        el.requestPointerLock();
+      }
+    }
+
+    document.addEventListener('pointerlockchange', () => {
+      isPointerLocked = document.pointerLockElement === renderer.domElement;
+    });
+
+    window.addEventListener('mousedown', e => {
+      // If clicking inside canvas while playing, lock pointer
+      if (engine && engine.state === 'playing' && !engine.is_paused) {
+        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+          requestGamePointerLock();
         }
-      });
+      }
+      isMouseDown = true;
+      prevMouseX = e.clientX;
+    });
+
+    window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+    window.addEventListener('mousemove', e => {
+      if (isPointerLocked) {
+        // Direct FPS / TPS free mouse look without dragging
+        const dx = e.movementX || 0;
+        const dy = e.movementY || 0;
+        camYaw -= dx * 0.22 * userSettings.sensitivity;
+        camPitch = Math.max(5, Math.min(65, camPitch + dy * 0.18 * userSettings.sensitivity));
+      } else if (isMouseDown) {
+        // Drag fallback
+        const dx = e.clientX - prevMouseX;
+        camYaw -= dx * 0.35 * userSettings.sensitivity;
+        prevMouseX = e.clientX;
+      }
+    });
 
       requestAnimationFrame(gameLoop);
     }
@@ -1118,14 +1148,17 @@
       const faceAngle = Math.atan2(engine.player.facing[0], engine.player.facing[1]);
       playerMesh.rotation.y = faceAngle;
 
-      // Update Third-Person Camera
+      // Update Third-Person Camera with Yaw & Pitch
       const theta = (camYaw * Math.PI) / 180;
+      const phi = (camPitch * Math.PI) / 180;
       const camDist = 10.0;
-      const camHeight = 5.5;
+      const horizDist = camDist * Math.cos(phi);
+      const camHeight = Math.max(1.5, camDist * Math.sin(phi));
+
       camera.position.set(
-        engine.player.pos[0] - Math.sin(theta) * camDist,
+        engine.player.pos[0] - Math.sin(theta) * horizDist,
         engine.player.pos[1] + camHeight,
-        engine.player.pos[2] - Math.cos(theta) * camDist
+        engine.player.pos[2] - Math.cos(theta) * horizDist
       );
       camera.lookAt(engine.player.pos[0], engine.player.pos[1] + 1.2, engine.player.pos[2]);
 
