@@ -1,4 +1,10 @@
-# AI Agents & Harness Guidelines: Đảo Đèn Lồng (Contract v1.2 - Phase 3)
+# AI Agents & Harness Guidelines: Đảo Đèn Lồng (Contract v1.3 - Phase 4 / v1.0.0)
+
+## Contract v1.3 deltas (Ticket-04)
+- `game.contract.json`: `contract_version: "1.3"`, `run_cmd: "node server.js"`, `bench_cmd: "node src/bench.js"`, `soak_cmd: "node src/soak.js"`.
+- Benchmark: `node src/bench.js --seed 42 --duration 30 --out bench.json` (1280×720 non-fullscreen window, vsync off, Night 1, 200 wandering Shades, 100 Motes, L1–L3 lit @ 100 fuel, orbital camera r=30m Y=15m CCW 15s/rev, 3s warmup).
+- Soak test: `node src/soak.js --seed 7 --nights 10 --out soak.json` (10 consecutive Nights cycling 1→2→3, `crashes = 0`, `mem_end_mb <= 1.2 * mem_start_mb`).
+- Leaderboard export: `node server.js --export-leaderboard out.json` outputs `{"entries": [...]}` sorted by score desc, tie-break earlier `achieved_at`.
 
 ## Contract v1.2 deltas (Ticket-03, supersede v1.1 where they conflict; see docs/adr/0001-*.md)
 - Lantern = `{lit, fuel, deposited, ever_lit, relit_count}`; fuel kept as integer 1/60 units (`fuel_u`), never floats. Max 100, decay 1/s, drain 5/s per `drain` Shade.

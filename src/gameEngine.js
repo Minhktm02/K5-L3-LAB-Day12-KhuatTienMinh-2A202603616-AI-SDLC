@@ -1512,6 +1512,119 @@ class GameEngine {
       }))
     };
   }
+
+  // Contract v1.3 Benchmark Scene (Night 1: 200 wandering Shades, 100 Motes, L1-L3 lit @ 100 fuel)
+  initBenchWorld() {
+    this.random_motes = false;
+    this.random_shades = false;
+    this.random_drifters = false;
+    this.motes = [];
+    this.shades = [];
+    this.drifters = [];
+    this.player.pos = [0.0, 0.0, 0.0];
+    this.player.vel = [0.0, 0.0, 0.0];
+
+    // Light L1-L3 with fuel 100
+    for (const l of this.lanterns) {
+      if (l.id === 'L1' || l.id === 'L2' || l.id === 'L3') {
+        l.lit = true;
+        l.fuel_u = this.FUEL_MAX_U;
+        l.ever_lit = true;
+        l.deposited = this.tuning.lantern_cost || 10;
+      } else {
+        l.lit = false;
+        l.fuel_u = 0;
+        l.deposited = 0;
+      }
+    }
+
+    const safeLanterns = this.lanterns.filter(l => this.isSafeLantern(l));
+
+    // Spawn 200 Shades evenly spread on Night 1 island (r <= 38m), outside safe zones
+    for (let i = 0; i < 200; i++) {
+      let x = 0, z = 0;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const r = Math.sqrt(this.random()) * 37.5;
+        const theta = this.random() * Math.PI * 2;
+        x = round3(r * Math.cos(theta));
+        z = round3(r * Math.sin(theta));
+        const inSafe = safeLanterns.some(l => Math.hypot(x - l.pos[0], z - l.pos[2]) < this.tuning.safe_radius + 0.5);
+        if (!inSafe) break;
+      }
+      this.shades.push({
+        id: `S${this.shade_seq++}`,
+        pos: [x, 0.0, z],
+        state: 'wander',
+        state_ticks_left: 0,
+        push_ticks_left: 0,
+        push_dir: [1, 0],
+        recoil_dir: [-1, 0],
+        wander_angle: this.random() * Math.PI * 2,
+        active_from_tick: 0,
+        target_lantern_id: null,
+        drain_count: 0
+      });
+    }
+
+    // Spawn 100 Motes spread on Night 1 island (bench allowed to exceed gameplay cap)
+    for (let i = 0; i < 100; i++) {
+      const r = Math.sqrt(this.random()) * 37.5;
+      const theta = this.random() * Math.PI * 2;
+      this.motes.push({
+        id: `M${this.mote_seq++}`,
+        pos: [round3(r * Math.cos(theta)), 0.0, round3(r * Math.sin(theta))],
+        kind: 'random',
+        ttl_ticks: null,
+        active_from_tick: 0
+      });
+    }
+  }
+
+  // Contract v1.3 Benchmark Step: Shades wander normally; spawning, damage, pickup, fuel decay & win/lose disabled
+  stepBench(dtSeconds = 1 / 60) {
+    this.tick += 1;
+    this.sim_tick += 1;
+    const shadeSpd = (this.shade_speed_night || this.tuning.shade_speed) * dtSeconds;
+    const litLanterns = this.lanterns.filter(l => this.isSafeLantern(l));
+    const unlitLanterns = this.lanterns.filter(l => !l.lit);
+
+    for (const shade of this.shades) {
+      let target = null;
+      let bestD = Infinity;
+      for (const l of unlitLanterns) {
+        const d = Math.hypot(l.pos[0] - shade.pos[0], l.pos[2] - shade.pos[2]);
+        if (d < bestD - 1e-9 || (Math.abs(d - bestD) <= 1e-9 && bestD < Infinity && target && l.id < target.id)) {
+          target = l;
+          bestD = d;
+        }
+      }
+
+      if (target && bestD > 2.0) {
+        const tx = (target.pos[0] - shade.pos[0]) / bestD;
+        const tz = (target.pos[2] - shade.pos[2]) / bestD;
+        const nx = shade.pos[0] + tx * shadeSpd;
+        const nz = shade.pos[2] + tz * shadeSpd;
+        const blockedBySafe = litLanterns.some(l => Math.hypot(nx - l.pos[0], nz - l.pos[2]) < this.tuning.safe_radius);
+        if (this.getSurfaceHeightAt(nx, nz) !== -Infinity && !blockedBySafe) {
+          shade.pos[0] = nx;
+          shade.pos[2] = nz;
+        }
+      } else {
+        // Orbit/wander smoothly around unlit lantern or island
+        shade.wander_angle += 0.6 * dtSeconds;
+        const wanderSpd = 1.5 * dtSeconds;
+        const nx = shade.pos[0] + Math.cos(shade.wander_angle) * wanderSpd;
+        const nz = shade.pos[2] + Math.sin(shade.wander_angle) * wanderSpd;
+        const blockedBySafe = litLanterns.some(l => Math.hypot(nx - l.pos[0], nz - l.pos[2]) < this.tuning.safe_radius);
+        if (this.getSurfaceHeightAt(nx, nz) !== -Infinity && !blockedBySafe) {
+          shade.pos[0] = nx;
+          shade.pos[2] = nz;
+        } else {
+          shade.wander_angle += Math.PI * 0.7;
+        }
+      }
+    }
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

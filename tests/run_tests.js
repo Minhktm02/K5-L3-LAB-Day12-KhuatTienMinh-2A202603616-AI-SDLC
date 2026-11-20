@@ -4,14 +4,16 @@ const path = require('path');
 const { execSync } = require('child_process');
 const GameEngine = require('../src/gameEngine');
 
-console.log('=== RUNNING TEST SUITE: DAO DEN LONG (CONTRACT v1.2 - PHASE 3) ===');
+console.log('=== RUNNING TEST SUITE: DAO DEN LONG (CONTRACT v1.3 - PHASE 4) ===');
 
 const rootDir = path.resolve(__dirname, '..');
-const proofDir = path.resolve(rootDir, 'docs/proof/phase-3');
+const proofDir = path.resolve(rootDir, 'docs/proof/phase-4');
 fs.mkdirSync(proofDir, { recursive: true });
 
 const contract = JSON.parse(fs.readFileSync(path.resolve(rootDir, 'game.contract.json'), 'utf8'));
-assert.strictEqual(contract.contract_version, '1.2', 'Contract version must be 1.2');
+assert.strictEqual(contract.contract_version, '1.3', 'Contract version must be 1.3');
+assert.strictEqual(contract.bench_cmd, 'node src/bench.js', 'Contract must define bench_cmd');
+assert.strictEqual(contract.soak_cmd, 'node src/soak.js', 'Contract must define soak_cmd');
 assert.strictEqual(contract.tuning.night1_duration_s, 240);
 assert.strictEqual(contract.tuning.night2_duration_s, 270);
 assert.strictEqual(contract.tuning.night3_duration_s, 300);
@@ -31,8 +33,8 @@ const baseScn = { random_motes: false, random_shades: false, random_drifters: fa
 
 // 1. Determinism
 console.log('1. Checking Determinism...');
-run('--seed 123 --night 1 --ticks 350 --out docs/proof/phase-3/det1.jsonl');
-run('--seed 123 --night 1 --ticks 350 --out docs/proof/phase-3/det2.jsonl');
+run('--seed 123 --night 1 --ticks 350 --out docs/proof/phase-4/det1.jsonl');
+run('--seed 123 --night 1 --ticks 350 --out docs/proof/phase-4/det2.jsonl');
 assert.strictEqual(
   fs.readFileSync(path.resolve(proofDir, 'det1.jsonl'), 'utf8'),
   fs.readFileSync(path.resolve(proofDir, 'det2.jsonl'), 'utf8'),
@@ -42,13 +44,13 @@ console.log('✓ Determinism verified.');
 
 // 2. Regression Phase 1: mote pickup
 console.log('2. Regression Phase 1: mote pickup...');
-run('--seed 42 --night 1 --scenario tests/scenarios/mote_pickup_scenario.json --inputs tests/scenarios/mote_pickup_inputs.json --ticks 60 --out docs/proof/phase-3/pickup.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/mote_pickup_scenario.json --inputs tests/scenarios/mote_pickup_inputs.json --ticks 60 --out docs/proof/phase-4/pickup.jsonl');
 assert(readJsonl(path.resolve(proofDir, 'pickup.jsonl')).some(r => r.type === 'event' && r.name === 'mote_picked' && r.data.carried === 1));
 console.log('✓ Mote pickup verified.');
 
 // 3. Dawn win (replaces the old "all lanterns lit => instant win" test, see ADR-0001)
 console.log('3. Dawn win scenario (3/5 lanterns lit at dawn)...');
-run('--seed 42 --night 1 --scenario tests/scenarios/dawn_win_scenario.json --ticks 100 --out docs/proof/phase-3/dawn_win.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/dawn_win_scenario.json --ticks 100 --out docs/proof/phase-4/dawn_win.jsonl');
 const dawnRecs = readJsonl(path.resolve(proofDir, 'dawn_win.jsonl'));
 const dawnEnd = dawnRecs[dawnRecs.length - 1];
 assert.strictEqual(dawnEnd.type, 'end');
@@ -61,7 +63,7 @@ console.log('✓ Dawn win verified (dawn_survived, score 597).');
 
 // 4. Dash
 console.log('4. Dash...');
-run('--seed 42 --night 1 --scenario tests/scenarios/dash_scenario.json --inputs tests/scenarios/dash_inputs.json --ticks 20 --snapshot-every 12 --out docs/proof/phase-3/dash.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/dash_scenario.json --inputs tests/scenarios/dash_inputs.json --ticks 20 --snapshot-every 12 --out docs/proof/phase-4/dash.jsonl');
 const dashRecs = readJsonl(path.resolve(proofDir, 'dash.jsonl'));
 assert(dashRecs.some(r => r.type === 'event' && r.name === 'dash'));
 const s12 = dashRecs.find(r => r.type === 'snapshot' && r.tick === 12);
@@ -70,7 +72,7 @@ console.log('✓ Dash verified.');
 
 // 5. Drifter
 console.log('5. Drifter steal & drop...');
-run('--seed 42 --night 2 --scenario tests/scenarios/drifter_scenario.json --inputs tests/scenarios/drifter_inputs.json --ticks 30 --out docs/proof/phase-3/drifter.jsonl');
+run('--seed 42 --night 2 --scenario tests/scenarios/drifter_scenario.json --inputs tests/scenarios/drifter_inputs.json --ticks 30 --out docs/proof/phase-4/drifter.jsonl');
 const drRecs = readJsonl(path.resolve(proofDir, 'drifter.jsonl'));
 const steal = drRecs.find(r => r.type === 'event' && r.name === 'drifter_steal');
 assert(steal && steal.data.amount === 3 && steal.data.carried === 3);
@@ -80,7 +82,7 @@ console.log('✓ Drifter verified.');
 
 // 6. Charm
 console.log('6. Wind charm...');
-run('--seed 42 --night 2 --scenario tests/scenarios/charm_scenario.json --inputs tests/scenarios/charm_inputs.json --ticks 30 --out docs/proof/phase-3/charm.jsonl');
+run('--seed 42 --night 2 --scenario tests/scenarios/charm_scenario.json --inputs tests/scenarios/charm_inputs.json --ticks 30 --out docs/proof/phase-4/charm.jsonl');
 const chRecs = readJsonl(path.resolve(proofDir, 'charm.jsonl'));
 const chEv = chRecs.find(r => r.type === 'event' && r.name === 'charm_picked');
 assert(chEv && chEv.data.charm_id === 'C1' && chEv.data.charm_ticks === 600);
@@ -89,10 +91,10 @@ console.log('✓ Wind charm verified.');
 
 // 7. Jump pads
 console.log('7. Night 2 / Night 3 jump pads...');
-run('--seed 42 --night 2 --scenario tests/scenarios/jumppad_night2_scenario.json --inputs tests/scenarios/jumppad_night2_inputs.json --ticks 100 --out docs/proof/phase-3/jumppad_n2.jsonl');
+run('--seed 42 --night 2 --scenario tests/scenarios/jumppad_night2_scenario.json --inputs tests/scenarios/jumppad_night2_inputs.json --ticks 100 --out docs/proof/phase-4/jumppad_n2.jsonl');
 const jp2 = readJsonl(path.resolve(proofDir, 'jumppad_n2.jsonl')).filter(r => r.type === 'snapshot').pop();
 assert(Math.hypot(jp2.player.pos[0] - 70, jp2.player.pos[2]) <= 28 && jp2.player.grounded);
-run('--seed 42 --night 3 --scenario tests/scenarios/night3_tier_scenario.json --inputs tests/scenarios/night3_tier_inputs.json --ticks 80 --out docs/proof/phase-3/night3_tier.jsonl');
+run('--seed 42 --night 3 --scenario tests/scenarios/night3_tier_scenario.json --inputs tests/scenarios/night3_tier_inputs.json --ticks 80 --out docs/proof/phase-4/night3_tier.jsonl');
 const n3 = readJsonl(path.resolve(proofDir, 'night3_tier.jsonl')).filter(r => r.type === 'snapshot').pop();
 assert.strictEqual(n3.player.pos[1], 6);
 assert.strictEqual(n3.player.grounded, true);
@@ -100,7 +102,7 @@ console.log('✓ Jump pads verified.');
 
 // 8. Pause
 console.log('8. Pause & resume...');
-run('--seed 42 --night 1 --scenario tests/scenarios/dash_scenario.json --inputs tests/scenarios/pause_inputs.json --ticks 20 --snapshot-every 5 --out docs/proof/phase-3/pause.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/dash_scenario.json --inputs tests/scenarios/pause_inputs.json --ticks 20 --snapshot-every 5 --out docs/proof/phase-4/pause.jsonl');
 const paRecs = readJsonl(path.resolve(proofDir, 'pause.jsonl'));
 assert(paRecs.some(r => r.name === 'paused') && paRecs.some(r => r.name === 'resumed'));
 const p10 = paRecs.find(r => r.type === 'snapshot' && r.tick === 10);
@@ -154,7 +156,7 @@ console.log('✓ Fuel decay / lantern_out / relight / capacity verified.');
 
 // 11. Refuel (headless scenario) and full-fuel lantern ignored
 console.log('11. Refuel scenario...');
-run('--seed 42 --night 1 --scenario tests/scenarios/refuel_scenario.json --inputs tests/scenarios/refuel_inputs.json --ticks 10 --snapshot-every 1 --out docs/proof/phase-3/refuel.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/refuel_scenario.json --inputs tests/scenarios/refuel_inputs.json --ticks 10 --snapshot-every 1 --out docs/proof/phase-4/refuel.jsonl');
 const rfRecs = readJsonl(path.resolve(proofDir, 'refuel.jsonl'));
 const refuels = rfRecs.filter(r => r.type === 'event' && r.name === 'refuel');
 // Fuel decays (step 2) before interaction (step 5), so a lit lantern is never exactly full at the next
@@ -182,7 +184,7 @@ console.log('✓ Safe-zone boundary verified.');
 
 // 13. Drain: wander shade hunts weak lantern, drains 5/s, lantern_out, shade back to wander
 console.log('13. Shade drain scenario...');
-run('--seed 42 --night 1 --scenario tests/scenarios/drain_scenario.json --ticks 300 --snapshot-every 30 --out docs/proof/phase-3/drain.jsonl');
+run('--seed 42 --night 1 --scenario tests/scenarios/drain_scenario.json --ticks 300 --snapshot-every 30 --out docs/proof/phase-4/drain.jsonl');
 const dnRecs = readJsonl(path.resolve(proofDir, 'drain.jsonl'));
 const drainSnap = dnRecs.find(r => r.type === 'snapshot' && r.shades.some(s => s.state === 'drain'));
 assert(drainSnap, 'Shade must enter drain state next to a weak lantern');
@@ -249,14 +251,56 @@ assert.strictEqual(capOf(5), 20);
 assert.strictEqual(capOf(9), 20, 'Capacity capped at 20');
 console.log('✓ Capacity verified.');
 
-// 17. Benchmark
+// 17. Benchmark headless speed
 console.log('17. Performance benchmark (21,600 ticks, Night 3)...');
 const tStart = Date.now();
-run('--seed 777 --night 3 --ticks 21600 --snapshot-every 60 --out docs/proof/phase-3/bench_night3.jsonl');
+run('--seed 777 --night 3 --ticks 21600 --snapshot-every 60 --out docs/proof/phase-4/bench_night3.jsonl');
 const elapsedMs = Date.now() - tStart;
 console.log(`✓ Completed in ${elapsedMs} ms (limit 30,000 ms).`);
 assert(elapsedMs <= 30000);
 
+// 18. Contract v1.3: Bench scene initialization (200 shades, 100 motes, L1-L3 lit @ fuel 100, no decay)
+console.log('18. Benchmark scene setup & stability...');
+const eBench = new GameEngine(contract, 42, 1);
+eBench.initBenchWorld();
+assert.strictEqual(eBench.shades.length, 200, 'Bench scene must have 200 Shades');
+assert(eBench.shades.every(s => s.state === 'wander'), 'All bench Shades must be wandering');
+assert.strictEqual(eBench.motes.length, 100, 'Bench scene must have 100 Motes');
+assert.strictEqual(eBench.lanterns.filter(l => l.lit).length, 3, 'L1-L3 must be lit');
+assert(eBench.lanterns.slice(0, 3).every(l => l.fuel_u === eBench.FUEL_MAX_U), 'L1-L3 must have fuel 100');
+for (let i = 0; i < 60; i++) eBench.stepBench(1 / 60);
+assert.strictEqual(eBench.shades.length, 200, 'Bench scene must not spawn/despawn Shades');
+assert.strictEqual(eBench.motes.length, 100, 'Bench scene must not pick up Motes');
+assert(eBench.lanterns.slice(0, 3).every(l => l.fuel_u === eBench.FUEL_MAX_U), 'Bench scene must not decay fuel');
+assert.strictEqual(eBench.state, 'playing', 'Bench scene must not end');
+console.log('✓ Benchmark scene verified.');
+
+// 19. Contract v1.3: Leaderboard validation, tie-break, top-10 cap, and CLI export
+console.log('19. Local leaderboard & --export-leaderboard CLI...');
+const lb = require('../src/leaderboard');
+const tmpLbPath = path.resolve(proofDir, 'tmp_lb.json');
+if (fs.existsSync(tmpLbPath)) fs.unlinkSync(tmpLbPath);
+assert.strictEqual(lb.validateName('May_01'), true);
+assert.strictEqual(lb.validateName('MinhÁnh'), true, 'Vietnamese name supported');
+assert.strictEqual(lb.validateName('ab'), false, 'Too short (<3)');
+assert.strictEqual(lb.validateName('abcdefghijklmn'), false, 'Too long (>12)');
+assert.strictEqual(lb.validateName('bad name!'), false, 'Invalid chars');
+lb.addEntry({ name: 'LateTie', score: 1000, nights_won: 3, seed: 1, achieved_at: '2026-11-20T12:00:00+07:00' }, tmpLbPath);
+lb.addEntry({ name: 'EarlyTie', score: 1000, nights_won: 3, seed: 2, achieved_at: '2026-11-20T11:00:00+07:00' }, tmpLbPath);
+for (let i = 0; i < 12; i++) {
+  lb.addEntry({ name: `Player_${i}`, score: 100 + i * 10, nights_won: 1, seed: i }, tmpLbPath);
+}
+const loadedLb = lb.loadLeaderboard(tmpLbPath);
+assert.strictEqual(loadedLb.entries.length, 10, 'Leaderboard keeps top 10');
+assert.strictEqual(loadedLb.entries[0].name, 'EarlyTie', 'Earlier achieved_at wins ties');
+assert.strictEqual(loadedLb.entries[1].name, 'LateTie');
+const exportedPath = path.resolve(proofDir, 'exported_lb.json');
+execSync(`node server.js --export-leaderboard "${exportedPath}"`, { cwd: rootDir });
+const exportedJson = JSON.parse(fs.readFileSync(exportedPath, 'utf8'));
+assert(Array.isArray(exportedJson.entries), '--export-leaderboard must output {"entries": [...]}');
+fs.unlinkSync(tmpLbPath);
+console.log('✓ Leaderboard & CLI export verified.');
+
 console.log('==========================================================');
-console.log('ALL PHASE 3 TESTS PASSED SUCCESSFULLY! (17/17)');
+console.log('ALL PHASE 4 TESTS PASSED SUCCESSFULLY! (19/19)');
 console.log('==========================================================');

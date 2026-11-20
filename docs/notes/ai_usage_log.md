@@ -24,3 +24,12 @@
 - Model: Claude Sonnet 5.5 (via Antigravity). Est. ~70k tokens (~$0.05). Saved tokens by editing only the touched engine sections and reusing the single shared engine for headless + browser.
 - AI mistakes found by self-review: (1) an edit dropped the closing braces of the scenario shades loop (syntax break) - caught by re-reading the file and fixed before running; (2) an edit removed `invuln:` from the snapshot and a colour line in the UI - caught by diff review and restored; (3) my first refuel test assumed a lit lantern stays full between ticks - wrong because decay runs before interaction; test corrected and the behaviour documented in ADR-0001.
 - Harness change: AGENTS.md now lists the v1.2 deltas and the rule 'never skip a test, remove with reason'; verify-contract skill updated to 17 checks.
+
+## Phase 4 (Ticket-04, Contract v1.3 — v1.0.0)
+- Model: Gemini (via Antigravity). Est. ~55k tokens (~$0.04).
+- Saved tokens by batching independent file writes (`leaderboard.js`, `server.js`, `soak.js`, `bench.js`) and running `npm test`, `npm run soak`, and `npm run bench` in parallel.
+- AI mistakes / issues caught by real execution:
+  1. Initial soak test had `mem_start_mb: 40.2` → `mem_end_mb: 50.2` (1.25x > 1.2x) due to cold V8 JIT compilation during Night 1; fixed by adding a brief 3-night V8 JIT warmup before Night 1 (`46.1 MB → 53.4 MB`, 1.158x <= 1.2x).
+  2. Initial 3D benchmark had `p1_low_fps: 21.1` on Intel HD 4600 due to synchronous `execSync('tasklist')` every 1s, unused `shadowMap.enabled = true`, and per-frame DOM mutations; fixed with async RSS polling, disabling unused shadow map, and static warmup/measuring labels (`avg_fps: 110.2`, `p1_low_fps: 35.6`, `load_ms: 2241 ms`).
+  3. Changed `run_cmd` from `npm start` to `node server.js` so `<run_cmd> --export-leaderboard out.json` works directly without npm swallowing CLI flags.
+- Harness update: updated `AGENTS.md` for Contract v1.3 and expanded `tests/run_tests.js` to 19/19 passing tests.

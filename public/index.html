@@ -26,6 +26,12 @@
       --col-drifter: #8FA3B8;
       --col-danger: #FF5A5F;
       --col-text: #F5F1E6;
+      --ui-scale: 1;
+      --fs-base: calc(18px * var(--ui-scale));
+      --fs-md: calc(20px * var(--ui-scale));
+      --fs-lg: calc(24px * var(--ui-scale));
+      --fs-xl: calc(30px * var(--ui-scale));
+      --fs-title: calc(36px * var(--ui-scale));
     }
 
     * {
@@ -33,16 +39,21 @@
       user-select: none;
     }
 
-    /* Colour-blind friendly palette (Ticket-03 §6) */
+    /* Accessibility: Large Text (x1.25) */
+    body.large-text {
+      --ui-scale: 1.25;
+    }
+
+    /* Accessibility: Colour-blind friendly palette (Ticket-03 §6) */
     body.colorblind {
       --col-danger: #FFFFFF;
       --col-shade-edge: #00B3FF;
     }
-    #mote-count {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--col-core);
-      text-align: center;
+
+    /* Accessibility: Reduce Motion */
+    body.reduce-motion * {
+      animation: none !important;
+      transition: none !important;
     }
 
     body, html {
@@ -54,6 +65,7 @@
       background-color: var(--bg-night);
       color: var(--col-text);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: var(--fs-base);
     }
 
     #canvas-container {
@@ -64,6 +76,33 @@
       left: 0;
       z-index: 1;
     }
+
+    /* Screen Flash Overlay (disabled in Reduce Motion) */
+    #screen-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+      opacity: 0;
+      transition: opacity 0.25s ease-out;
+    }
+
+    /* Benchmark Overlay */
+    #bench-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(14, 20, 48, 0.85);
+      border: 1.5px solid var(--col-gold);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--col-gold);
+      z-index: 40;
+      pointer-events: none;
+    }
+    #bench-overlay.hidden { display: none; }
 
     /* HUD */
     #hud {
@@ -77,7 +116,7 @@
     }
 
     .hud-panel {
-      background: rgba(14, 20, 48, 0.78);
+      background: rgba(14, 20, 48, 0.82);
       border: 1.5px solid var(--col-gold);
       border-radius: 12px;
       padding: 10px 16px;
@@ -88,8 +127,8 @@
     /* Top Left: Flames */
     #hud-top-left {
       position: absolute;
-      top: 16px;
-      left: 16px;
+      top: 14px;
+      left: 14px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -98,7 +137,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 24px;
+      font-size: var(--fs-lg);
     }
     .flame-pip {
       display: inline-block;
@@ -109,7 +148,7 @@
       filter: grayscale(1);
     }
     #night-label {
-      font-size: 13px;
+      font-size: var(--fs-base);
       color: var(--col-gold);
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -118,14 +157,14 @@
     /* Top Center: Clock mm:ss */
     #hud-top-center {
       position: absolute;
-      top: 16px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       text-align: center;
-      min-width: 140px;
+      min-width: 170px;
     }
     #ui-clock {
-      font-size: 28px;
+      font-size: var(--fs-xl);
       font-weight: 800;
       letter-spacing: 2px;
       color: var(--col-text);
@@ -136,39 +175,70 @@
     }
     @keyframes blinkDanger {
       from { opacity: 1; transform: scale(1); }
-      to { opacity: 0.45; transform: scale(1.08); }
+      to { opacity: 0.45; transform: scale(1.06); }
     }
     #ui-status-banner {
-      font-size: 12px;
+      font-size: var(--fs-base);
       margin-top: 2px;
       color: var(--col-gold);
-      min-height: 16px;
+      min-height: 22px;
+      font-weight: 600;
+    }
+
+    /* Subtitles / Visual Alert Banner (Accessibility) */
+    #subtitle-container {
+      position: absolute;
+      top: 112px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 18;
+      pointer-events: none;
+      max-width: 90%;
+    }
+    .subtitle-pill {
+      background: rgba(14, 20, 48, 0.92);
+      border: 2px solid var(--col-lit);
+      color: var(--col-text);
+      padding: 6px 16px;
+      border-radius: 10px;
+      font-size: var(--fs-base);
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+      text-align: center;
+    }
+    .subtitle-pill.danger {
+      border-color: var(--col-danger);
+      color: var(--col-danger);
     }
 
     /* Top Right: Lanterns k/n & Score */
     #hud-top-right {
       position: absolute;
-      top: 16px;
-      right: 16px;
+      top: 14px;
+      right: 14px;
       text-align: right;
-      min-width: 170px;
+      min-width: 210px;
     }
     .score-val {
-      font-size: 22px;
+      font-size: var(--fs-lg);
       font-weight: 800;
       color: var(--col-gold);
     }
     .lantern-val {
-      font-size: 16px;
-      font-weight: 600;
+      font-size: var(--fs-base);
+      font-weight: 700;
       color: var(--col-lit);
       margin-bottom: 4px;
     }
 
-    /* Bottom Center: 10-slot Mote bar */
+    /* Bottom Center: Mote bar */
     #hud-bottom-center {
       position: absolute;
-      bottom: 20px;
+      bottom: 16px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -178,12 +248,15 @@
     }
     #mote-bar {
       display: flex;
-      gap: 6px;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 460px;
     }
     .mote-slot {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
       border: 1.5px solid rgba(242, 193, 78, 0.45);
       background: rgba(14, 20, 48, 0.7);
       display: flex;
@@ -196,16 +269,23 @@
       border-color: var(--col-mote);
       box-shadow: 0 0 10px var(--col-mote-halo);
     }
+    #mote-count {
+      font-size: var(--fs-base);
+      font-weight: 700;
+      color: var(--col-core);
+      text-align: center;
+      margin-top: 4px;
+    }
 
     /* Interact prompt */
     #interact-prompt {
-      background: rgba(14, 20, 48, 0.92);
-      border: 1.5px solid var(--col-lit);
+      background: rgba(14, 20, 48, 0.94);
+      border: 2px solid var(--col-lit);
       color: var(--col-core);
       padding: 8px 18px;
       border-radius: 20px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: var(--fs-base);
       box-shadow: 0 0 14px rgba(255, 179, 71, 0.4);
     }
     #interact-prompt.hidden {
@@ -215,40 +295,38 @@
     /* Bottom Right: Cooldown Icons (Dash & Pulse) */
     #hud-bottom-right {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
+      bottom: 16px;
+      right: 16px;
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
     .skill-box {
-      width: 72px;
-      height: 72px;
+      min-width: 112px;
+      padding: 8px 10px;
       border-radius: 12px;
-      background: rgba(14, 20, 48, 0.85);
+      background: rgba(14, 20, 48, 0.88);
       border: 2px solid var(--col-gold);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
     }
     .skill-box.disabled {
       border-color: var(--col-unlit);
-      opacity: 0.65;
+      opacity: 0.7;
     }
     .skill-key {
-      font-size: 11px;
+      font-size: var(--fs-base);
       color: var(--col-gold);
       font-weight: 700;
     }
     .skill-name {
-      font-size: 12px;
+      font-size: var(--fs-base);
       font-weight: 700;
       margin-top: 2px;
     }
     .skill-cd {
-      font-size: 13px;
+      font-size: var(--fs-base);
       font-weight: 800;
       color: var(--col-danger);
     }
@@ -256,33 +334,38 @@
     /* Bottom Left: Controls Hint */
     #hud-bottom-left {
       position: absolute;
-      bottom: 20px;
-      left: 16px;
-      font-size: 12px;
-      color: rgba(245, 241, 230, 0.8);
-      background: rgba(14, 20, 48, 0.65);
+      bottom: 16px;
+      left: 14px;
+      font-size: var(--fs-base);
+      color: rgba(245, 241, 230, 0.92);
+      background: rgba(14, 20, 48, 0.78);
       padding: 8px 12px;
       border-radius: 8px;
-      border: 1px solid rgba(242, 193, 78, 0.25);
-      line-height: 1.5;
+      border: 1px solid rgba(242, 193, 78, 0.35);
+      line-height: 1.4;
+      max-width: 420px;
     }
 
-    /* Offscreen Arrow Indicator */
-    #offscreen-arrow {
+    /* Offscreen Arrows (Lantern & Shade) */
+    .edge-arrow {
       position: absolute;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
-      color: var(--col-lit);
-      text-shadow: 0 0 10px var(--col-lit);
-      z-index: 15;
+      font-size: 28px;
+      z-index: 16;
       pointer-events: none;
     }
-    #offscreen-arrow.hidden {
-      display: none;
+    .edge-arrow.hidden { display: none; }
+    #offscreen-arrow {
+      color: var(--col-lit);
+      text-shadow: 0 0 10px var(--col-lit);
+    }
+    #shade-arrow {
+      color: var(--col-danger);
+      text-shadow: 0 0 12px var(--col-shade-edge);
     }
 
     /* Menus & Overlays */
@@ -295,31 +378,34 @@
       align-items: center;
       justify-content: center;
       z-index: 30;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
+      overflow-y: auto;
     }
     .modal-screen.hidden {
       display: none;
     }
     .modal-card {
-      max-width: 580px;
+      max-width: 720px;
       width: 100%;
-      background: rgba(14, 20, 48, 0.92);
+      max-height: 92vh;
+      overflow-y: auto;
+      background: rgba(14, 20, 48, 0.95);
       border: 2px solid var(--col-gold);
       border-radius: 16px;
-      padding: 28px 32px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+      padding: 24px 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
     }
     .modal-title {
-      font-size: 34px;
+      font-size: var(--fs-title);
       font-weight: 800;
       color: var(--col-gold);
-      margin: 0 0 12px 0;
+      margin: 0 0 10px 0;
     }
     .modal-subtitle {
-      font-size: 18px;
+      font-size: var(--fs-md);
       color: var(--col-lit);
-      margin: 0 0 16px 0;
+      margin: 0 0 14px 0;
       font-weight: 600;
     }
     .story-box {
@@ -329,8 +415,9 @@
       border-radius: 8px;
       font-style: italic;
       color: var(--col-text);
-      line-height: 1.6;
-      margin-bottom: 22px;
+      font-size: var(--fs-base);
+      line-height: 1.55;
+      margin-bottom: 18px;
       text-align: left;
     }
     .btn-row {
@@ -338,11 +425,11 @@
       flex-wrap: wrap;
       gap: 12px;
       justify-content: center;
-      margin-top: 16px;
+      margin-top: 14px;
     }
     .btn {
-      padding: 11px 24px;
-      font-size: 15px;
+      padding: 10px 22px;
+      font-size: var(--fs-base);
       font-weight: 700;
       color: var(--bg-night);
       background: var(--col-gold);
@@ -370,22 +457,122 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 14px 0;
-      font-size: 15px;
+      margin: 10px 0;
+      font-size: var(--fs-base);
+      gap: 12px;
+      text-align: left;
     }
     .setting-row input[type="range"] {
-      width: 200px;
+      width: 190px;
       accent-color: var(--col-gold);
     }
+    .setting-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--col-gold);
+    }
+
+    /* Keybind grid */
+    .keybind-section {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(242, 193, 78, 0.35);
+      text-align: left;
+    }
+    .keybind-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .keybind-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(27, 35, 80, 0.55);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: var(--fs-base);
+    }
+    .keybind-btn {
+      min-width: 96px;
+      padding: 4px 10px;
+      font-size: var(--fs-base);
+      font-weight: 700;
+      background: rgba(14, 20, 48, 0.9);
+      color: var(--col-gold);
+      border: 1.5px solid var(--col-gold);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .keybind-btn.listening {
+      background: var(--col-lit);
+      color: var(--bg-night);
+    }
+    #keybind-warning {
+      margin-top: 8px;
+      color: var(--col-danger);
+      font-size: var(--fs-base);
+      font-weight: 700;
+      min-height: 24px;
+    }
+
+    /* Leaderboard Table & Form */
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: var(--fs-base);
+      text-align: left;
+    }
+    .lb-table th, .lb-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(242, 193, 78, 0.25);
+    }
+    .lb-table th {
+      color: var(--col-gold);
+    }
+    .lb-save-box {
+      background: rgba(27, 35, 80, 0.72);
+      border: 1.5px solid var(--col-gold);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+    .lb-input-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .lb-input {
+      padding: 8px 14px;
+      font-size: var(--fs-base);
+      border-radius: 10px;
+      border: 2px solid var(--col-gold);
+      background: var(--bg-night);
+      color: var(--col-text);
+      width: 240px;
+    }
+    #lb-save-msg {
+      margin-top: 8px;
+      font-size: var(--fs-base);
+      font-weight: 600;
+      min-height: 22px;
+    }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/lib/three.min.js"></script>
   <script src="/src/gameEngine.js"></script>
 </head>
 <body>
   <div id="canvas-container"></div>
+  <div id="screen-flash"></div>
+  <div id="bench-overlay" class="hidden">BENCHMARK MODE</div>
 
-  <!-- Off-screen Arrow -->
-  <div id="offscreen-arrow" class="hidden">➤</div>
+  <!-- Off-screen Arrows -->
+  <div id="offscreen-arrow" class="edge-arrow hidden" title="Đèn chưa sáng gần nhất">➤</div>
+  <div id="shade-arrow" class="edge-arrow hidden" title="Hướng Bóng Mực">⚠</div>
 
   <!-- HUD -->
   <div id="hud" class="hidden">
@@ -399,9 +586,11 @@
     </div>
 
     <div id="hud-top-center" class="hud-panel">
-      <div id="ui-clock">05:00</div>
+      <div id="ui-clock">04:00</div>
       <div id="ui-status-banner"></div>
     </div>
+
+    <div id="subtitle-container"></div>
 
     <div id="hud-top-right" class="hud-panel">
       <div class="lantern-val">🏮 Đèn: <span id="ui-lanterns">0/5</span></div>
@@ -410,7 +599,7 @@
 
     <div id="hud-bottom-center">
       <div id="interact-prompt" class="hidden">E — Nạp ánh sáng (0/10)</div>
-      <div class="hud-panel" style="padding: 8px 12px;">
+      <div class="hud-panel" style="padding: 8px 14px;">
         <div id="mote-bar"></div>
         <div id="mote-count">0 / 10</div>
       </div>
@@ -418,39 +607,62 @@
 
     <div id="hud-bottom-right">
       <div id="skill-dash" class="skill-box">
-        <div class="skill-key">[Shift]</div>
+        <div class="skill-key" id="ui-dash-key">[Shift]</div>
         <div class="skill-name">LƯỚT</div>
         <div id="ui-dash-cd" class="skill-cd">Sẵn sàng</div>
       </div>
       <div id="skill-pulse" class="skill-box">
-        <div class="skill-key">[F] (3✨)</div>
+        <div class="skill-key" id="ui-pulse-key">[F] (3✨)</div>
         <div class="skill-name">TỎA SÁNG</div>
         <div id="ui-pulse-cd" class="skill-cd">Sẵn sàng</div>
       </div>
     </div>
 
-    <div id="hud-bottom-left">
-      <b>WASD</b>: Di chuyển | <b>Space</b>: Nhảy | <b>Shift</b>: Lướt (Dash)<br>
-      <b>E</b>: Nạp đèn (10✨) | <b>F</b>: Tỏa sáng (3✨) | <b>Esc / P</b>: Tạm dừng
-    </div>
+    <div id="hud-bottom-left"></div>
   </div>
 
   <!-- MAIN MENU -->
   <div id="screen-menu" class="modal-screen">
     <div class="modal-card">
       <h1 class="modal-title">🏮 ĐẢO ĐÈN LỒNG</h1>
-      <div class="modal-subtitle">Hành trình giữ lửa qua Ba Hòn Đảo</div>
+      <div class="modal-subtitle">Hành trình giữ lửa qua Ba Hòn Đảo — v1.0.0</div>
       <div class="story-box">
-        "Sương đen đã nuốt trọn ánh sáng của quần đảo giữa biển mây. Cháu hãy cùng chiếc nón lá và ngọn đèn nhỏ gom đom đóm thắp sáng lại Đảo Bến, Đảo Cau và Đảo Chuông trước khi bình minh ló dạng..." — <b>Ông Đăng</b>
+        "Sương đen đã nuốt trọn ánh sáng của quần đảo giữa biển mây. Cháu hãy cùng chiếc nón lá và ngọn đèn nhỏ gom đom đóm thắp sáng và giữ lửa cho Đảo Bến, Đảo Cau và Đảo Chuông cho tới bình minh..." — <b>Ông Đăng</b>
       </div>
       <div class="btn-row">
-        <button class="btn" id="btn-play-campaign">BẮT ĐẦU HÀNH TRÌNH (ĐÊM 1)</button>
-        <button class="btn btn-secondary" id="btn-open-settings-menu">CÀI ĐẶT</button>
+        <button class="btn" id="btn-play-campaign">BẮT ĐẦU (ĐÊM 1)</button>
+        <button class="btn btn-secondary" id="btn-open-leaderboard">🏆 BẢNG XẾP HẠNG</button>
+        <button class="btn btn-secondary" id="btn-open-settings-menu">⚙ CÀI ĐẶT</button>
       </div>
       <div class="btn-row" style="margin-top: 12px;">
-        <button class="btn btn-secondary" onclick="startNightIntro(1)" style="padding: 6px 14px; font-size: 13px;">Chơi Đêm 1</button>
-        <button class="btn btn-secondary" onclick="startNightIntro(2)" style="padding: 6px 14px; font-size: 13px;">Chơi Đêm 2</button>
-        <button class="btn btn-secondary" onclick="startNightIntro(3)" style="padding: 6px 14px; font-size: 13px;">Chơi Đêm 3</button>
+        <button class="btn btn-secondary" onclick="startNightIntro(1)">Chơi Đêm 1</button>
+        <button class="btn btn-secondary" onclick="startNightIntro(2)">Chơi Đêm 2</button>
+        <button class="btn btn-secondary" onclick="startNightIntro(3)">Chơi Đêm 3</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN -->
+  <div id="screen-leaderboard" class="modal-screen hidden">
+    <div class="modal-card">
+      <h2 class="modal-title">🏆 BẢNG XẾP HẠNG</h2>
+      <div class="modal-subtitle">Top 10 Người Giữ Đèn Xuất Sắc Nhất</div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tên</th>
+            <th>Điểm</th>
+            <th>Đêm thắng</th>
+            <th>Seed</th>
+          </tr>
+        </thead>
+        <tbody id="lb-tbody">
+          <tr><td colspan="5">Đang tải...</td></tr>
+        </tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn" id="btn-close-leaderboard">QUAY LẠI MENU</button>
       </div>
     </div>
   </div>
@@ -459,7 +671,7 @@
   <div id="screen-intro" class="modal-screen hidden">
     <div class="modal-card">
       <h2 class="modal-title" id="intro-title">ĐÊM 1 — ĐẢO BẾN</h2>
-      <div class="modal-subtitle" id="intro-sub">5 Đèn Lồng Lớn · Thời gian 300 giây</div>
+      <div class="modal-subtitle" id="intro-sub">5 Đèn Lồng Lớn · Thời gian 240 giây</div>
       <div class="story-box" id="intro-story"></div>
       <div class="btn-row">
         <button class="btn" id="btn-start-night">VÀO ĐÊM</button>
@@ -471,7 +683,7 @@
   <div id="screen-pause" class="modal-screen hidden">
     <div class="modal-card">
       <h2 class="modal-title">TẠM DỪNG</h2>
-      <div class="btn-row" style="flex-direction: column; align-items: stretch; max-width: 260px; margin: 0 auto;">
+      <div class="btn-row" style="flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto;">
         <button class="btn" id="btn-resume">TIẾP TỤC</button>
         <button class="btn btn-secondary" id="btn-replay-pause">CHƠI LẠI ĐÊM</button>
         <button class="btn btn-secondary" id="btn-settings-pause">CÀI ĐẶT</button>
@@ -483,7 +695,7 @@
   <!-- SETTINGS MODAL -->
   <div id="screen-settings" class="modal-screen hidden">
     <div class="modal-card">
-      <h2 class="modal-title">CÀI ĐẶT</h2>
+      <h2 class="modal-title">⚙ CÀI ĐẶT & DỄ TIẾP CẬN</h2>
       <div class="setting-row">
         <span>Âm lượng (<span id="val-volume">70</span>%):</span>
         <input type="range" id="input-volume" min="0" max="100" value="70">
@@ -496,6 +708,24 @@
         <span>Bảng màu dễ phân biệt (mù màu):</span>
         <input type="checkbox" id="input-colorblind">
       </div>
+      <div class="setting-row">
+        <span>Giảm chuyển động (tắt rung & chớp):</span>
+        <input type="checkbox" id="input-reduce-motion">
+      </div>
+      <div class="setting-row">
+        <span>Chữ lớn (×1.25):</span>
+        <input type="checkbox" id="input-large-text">
+      </div>
+
+      <div class="keybind-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <b>Đổi phím điều khiển:</b>
+          <button class="btn btn-secondary" id="btn-reset-keybinds" style="padding: 6px 14px;">Khôi phục mặc định</button>
+        </div>
+        <div class="keybind-grid" id="keybind-grid"></div>
+        <div id="keybind-warning"></div>
+      </div>
+
       <div class="btn-row">
         <button class="btn" id="btn-close-settings">LƯU & ĐÓNG</button>
       </div>
@@ -508,28 +738,87 @@
       <h2 class="modal-title" id="res-title">ĐÊM ĐÃ SÁNG!</h2>
       <div class="modal-subtitle" id="res-subtitle">Điểm Đêm: 0</div>
       <div class="story-box" id="res-desc"></div>
+
+      <!-- Leaderboard Submit Form (shown on Dawn Win Night 3 or any Loss) -->
+      <div id="lb-save-box" class="lb-save-box hidden">
+        <div><b>Lưu điểm vào Bảng Xếp Hạng cục bộ</b></div>
+        <div class="lb-input-row">
+          <input type="text" id="input-player-name" class="lb-input" maxlength="12" placeholder="Tên (3–12 ký tự)">
+          <button class="btn" id="btn-save-score">LƯU ĐIỂM</button>
+        </div>
+        <div id="lb-save-msg"></div>
+      </div>
+
       <div class="btn-row">
         <button class="btn" id="btn-res-next">ĐÊM KẾ TIẾP</button>
+        <button class="btn btn-secondary" id="btn-res-lb">🏆 BẢNG XẾP HẠNG</button>
         <button class="btn btn-secondary" id="btn-res-menu">VỀ MENU</button>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Persistent Settings ---
-    const SETTINGS_KEY = 'dao_den_long_settings_v1';
-    let userSettings = { volume: 0.7, sensitivity: 1.0, colorblind: false };
+    // --- URL Query Params (Benchmark Mode Detection) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const IS_BENCH_MODE = urlParams.get('bench') === '1';
+    const BENCH_SEED = parseInt(urlParams.get('seed') || '42', 10);
+    const BENCH_DURATION_S = parseFloat(urlParams.get('duration') || '30');
+    const BENCH_START_TS = parseInt(urlParams.get('startTs') || String(Date.now()), 10);
+
+    // --- Default Keybinds & Persistent Settings ---
+    const DEFAULT_KEYBINDS = {
+      up: 'w',
+      down: 's',
+      left: 'a',
+      right: 'd',
+      jump: ' ',
+      dash: 'shift',
+      interact: 'e',
+      pulse: 'f',
+      pause: 'escape'
+    };
+    const ACTION_LABELS = {
+      up: 'Đi tới',
+      down: 'Đi lùi',
+      left: 'Sang trái',
+      right: 'Sang phải',
+      jump: 'Nhảy',
+      dash: 'Lướt (Dash)',
+      interact: 'Tương tác',
+      pulse: 'Tỏa sáng',
+      pause: 'Tạm dừng'
+    };
+
+    const SETTINGS_KEY = 'dao_den_long_settings_v2';
+    let userSettings = {
+      volume: 0.7,
+      sensitivity: 1.0,
+      colorblind: false,
+      reduceMotion: false,
+      largeText: false,
+      keybinds: { ...DEFAULT_KEYBINDS }
+    };
+
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
       if (saved) {
         if (typeof saved.volume === 'number') userSettings.volume = saved.volume;
         if (typeof saved.sensitivity === 'number') userSettings.sensitivity = saved.sensitivity;
         if (typeof saved.colorblind === 'boolean') userSettings.colorblind = saved.colorblind;
+        if (typeof saved.reduceMotion === 'boolean') userSettings.reduceMotion = saved.reduceMotion;
+        if (typeof saved.largeText === 'boolean') userSettings.largeText = saved.largeText;
+        if (saved.keybinds && typeof saved.keybinds === 'object') {
+          userSettings.keybinds = { ...DEFAULT_KEYBINDS, ...saved.keybinds };
+        }
       }
     } catch (e) {}
-    document.addEventListener('DOMContentLoaded', () => {
-      document.body.classList.toggle('colorblind', userSettings.colorblind);
-    });
+
+    function applyAccessibilityClasses() {
+      document.body.classList.toggle('colorblind', !!userSettings.colorblind);
+      document.body.classList.toggle('reduce-motion', !!userSettings.reduceMotion);
+      document.body.classList.toggle('large-text', !!userSettings.largeText);
+    }
+    applyAccessibilityClasses();
 
     function saveSettings() {
       try {
@@ -537,13 +826,32 @@
       } catch (e) {}
     }
 
-    // --- Web Audio Synthesizer (10 Required Sound Effects + Night BGM) ---
+    function formatKeyLabel(k) {
+      if (k === ' ') return 'Space';
+      if (k === 'escape') return 'Esc';
+      if (k === 'shift') return 'Shift';
+      if (k.startsWith('arrow')) return k.replace('arrow', '↑↓←→'.charAt(['up','down','left','right'].indexOf(k.slice(5))));
+      return k.toUpperCase();
+    }
+
+    function updateControlHints() {
+      const kb = userSettings.keybinds;
+      document.getElementById('ui-dash-key').textContent = `[${formatKeyLabel(kb.dash)}]`;
+      document.getElementById('ui-pulse-key').textContent = `[${formatKeyLabel(kb.pulse)}] (3✨)`;
+      document.getElementById('hud-bottom-left').innerHTML =
+        `<b>${formatKeyLabel(kb.up)}/${formatKeyLabel(kb.down)}/${formatKeyLabel(kb.left)}/${formatKeyLabel(kb.right)}</b>: Di chuyển · ` +
+        `<b>${formatKeyLabel(kb.jump)}</b>: Nhảy · <b>${formatKeyLabel(kb.dash)}</b>: Lướt<br>` +
+        `<b>${formatKeyLabel(kb.interact)}</b>: Nạp/Châm đèn · <b>${formatKeyLabel(kb.pulse)}</b>: Tỏa sáng · <b>${formatKeyLabel(kb.pause)}</b>: Tạm dừng`;
+    }
+
+    // --- Web Audio Synthesizer ---
     class SoundSystem {
       constructor() {
         this.ctx = null;
         this.bgmTimer = null;
       }
       init() {
+        if (IS_BENCH_MODE) return;
         if (!this.ctx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
           if (AudioCtx) this.ctx = new AudioCtx();
@@ -553,15 +861,13 @@
         }
       }
       playTone(freq, type, duration, gainVal = 0.15, slideFreq = null) {
-        if (!this.ctx || userSettings.volume <= 0) return;
+        if (IS_BENCH_MODE || !this.ctx || userSettings.volume <= 0) return;
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, now);
-        if (slideFreq) {
-          osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
-        }
+        if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
         const v = gainVal * userSettings.volume;
         gain.gain.setValueAtTime(v, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
@@ -593,6 +899,7 @@
         });
       }
       startBGM() {
+        if (IS_BENCH_MODE) return;
         this.init();
         if (this.bgmTimer) return;
         const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66];
@@ -606,7 +913,6 @@
         }, 1100);
       }
     }
-
     const sound = new SoundSystem();
 
     // --- Night Story Data ---
@@ -632,30 +938,50 @@
     let contract = null;
     let engine = null;
     let currentNight = 1;
+    let currentSeed = 42;
     let totalCampaignScore = 0;
     let nightScores = { 1: 0, 2: 0, 3: 0 };
+    let wonNights = new Set();
     let settingsReturnTo = 'menu';
     let lastCountdownSec = -1;
+    let listeningAction = null;
+
+    // Visual effects state (disabled in Reduce Motion)
+    let cameraShakeTicks = 0;
+    let subtitleAlerts = []; // { id, text, danger, expiresAt }
+    let lastSpawnedShadePos = null;
+    let lastSpawnedShadeUntil = 0;
 
     let scene, camera, renderer, ambientLight, moonLight;
     let mapGroup, playerMesh;
     let lanternMeshes = [];
-    let moteMeshes = [];
-    let shadeMeshes = [];
+    let moteInstanced = null;
+    let shadeInstanced = null;
     let drifterMeshes = [];
     let charmMeshes = [];
-    let windLeafParticles = null;
+    const dummyObj = new THREE.Object3D();
+    const tempColor = new THREE.Color();
 
     let keys = {};
     let prevInputButtons = { jump: false, interact: false, pulse: false, dash: false, pause: false };
     let camYaw = 0;
     let camPitch = 25;
     let isPointerLocked = false;
-    let isMouseDown = false;
     let prevMouseX = null;
     let prevMouseY = null;
 
-    // Build Mote Bar 10 slots
+    // Benchmark state
+    let benchState = {
+      firstFrameRecorded: false,
+      loadMs: 0,
+      startPerfMs: 0,
+      lastFramePerfMs: 0,
+      measuring: false,
+      done: false,
+      dts: []
+    };
+
+    // Build Mote Bar 20 slots
     const moteBarEl = document.getElementById('mote-bar');
     for (let i = 0; i < 20; i++) {
       const slot = document.createElement('div');
@@ -669,7 +995,44 @@
         contract = c;
         initThreeJS();
         setupUIHandlers();
+        updateControlHints();
+        if (IS_BENCH_MODE) {
+          startBenchmarkScene();
+        }
       });
+
+    function triggerScreenFlash(colorRgba) {
+      if (userSettings.reduceMotion || IS_BENCH_MODE) return;
+      const el = document.getElementById('screen-flash');
+      el.style.backgroundColor = colorRgba;
+      el.style.opacity = '0.45';
+      setTimeout(() => { el.style.opacity = '0'; }, 90);
+    }
+
+    function pushSubtitle(id, text, danger = false, durationMs = 3500) {
+      const now = Date.now();
+      const existing = subtitleAlerts.find(a => a.id === id);
+      if (existing) {
+        existing.text = text;
+        existing.danger = danger;
+        existing.expiresAt = now + durationMs;
+      } else {
+        subtitleAlerts.push({ id, text, danger, expiresAt: now + durationMs });
+      }
+    }
+
+    function renderSubtitles() {
+      const now = Date.now();
+      subtitleAlerts = subtitleAlerts.filter(a => a.expiresAt > now);
+      const container = document.getElementById('subtitle-container');
+      container.innerHTML = '';
+      for (const a of subtitleAlerts) {
+        const div = document.createElement('div');
+        div.className = 'subtitle-pill' + (a.danger ? ' danger' : '');
+        div.textContent = a.text;
+        container.appendChild(div);
+      }
+    }
 
     function initThreeJS() {
       const container = document.getElementById('canvas-container');
@@ -680,12 +1043,13 @@
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.position.set(0, 5.5, -10);
       camera.lookAt(0, 1.2, 0);
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.shadowMap.enabled = true;
+      renderer.setPixelRatio(IS_BENCH_MODE ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = false;
       container.appendChild(renderer.domElement);
 
-      // Ambient light scales with progress: 0.15 + 0.55 * (lit / total)
       ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
       scene.add(ambientLight);
 
@@ -693,7 +1057,6 @@
       moonLight.position.set(40, 80, 40);
       scene.add(moonLight);
 
-      // Cloud Sea (#12384A)
       const seaGeo = new THREE.PlaneGeometry(500, 500);
       const seaMat = new THREE.MeshStandardMaterial({ color: 0x12384A, roughness: 0.9 });
       const seaMesh = new THREE.Mesh(seaGeo, seaMat);
@@ -703,6 +1066,22 @@
 
       mapGroup = new THREE.Group();
       scene.add(mapGroup);
+
+      // InstancedMesh for Motes (up to 150) -> 1 draw call
+      const moteGeo = new THREE.SphereGeometry(0.22, 8, 8);
+      const moteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      moteInstanced = new THREE.InstancedMesh(moteGeo, moteMat, 150);
+      moteInstanced.count = 0;
+      moteInstanced.frustumCulled = false;
+      scene.add(moteInstanced);
+
+      // InstancedMesh for Shades (up to 250) -> 1 draw call
+      const shadeGeo = new THREE.SphereGeometry(0.75, 10, 10);
+      const shadeMat = new THREE.MeshStandardMaterial({ color: 0x261738, emissive: 0x7A3CFF, emissiveIntensity: 0.25, roughness: 0.6 });
+      shadeInstanced = new THREE.InstancedMesh(shadeGeo, shadeMat, 250);
+      shadeInstanced.count = 0;
+      shadeInstanced.frustumCulled = false;
+      scene.add(shadeInstanced);
 
       createPlayerMesh();
       buildNight3DMap(1);
@@ -714,21 +1093,36 @@
       });
 
       window.addEventListener('keydown', e => {
+        if (IS_BENCH_MODE) return;
         const k = e.key.toLowerCase();
+
+        // Key rebinding capture
+        if (listeningAction) {
+          e.preventDefault();
+          handleKeybindCapture(listeningAction, k);
+          return;
+        }
+
+        // Do not intercept typing in leaderboard input
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
         keys[k] = true;
-        if (k === 'escape' || k === 'p') {
+        if (k === userSettings.keybinds.pause || (k === 'escape' && userSettings.keybinds.pause !== 'escape')) {
           if (engine && (engine.state === 'playing' || engine.state === 'paused') &&
               document.getElementById('screen-menu').classList.contains('hidden') &&
               document.getElementById('screen-intro').classList.contains('hidden') &&
               document.getElementById('screen-result').classList.contains('hidden') &&
-              document.getElementById('screen-settings').classList.contains('hidden')) {
+              document.getElementById('screen-settings').classList.contains('hidden') &&
+              document.getElementById('screen-leaderboard').classList.contains('hidden')) {
             togglePauseGame();
           }
         }
       });
+
       window.addEventListener('keyup', e => {
         keys[e.key.toLowerCase()] = false;
       });
+
       function requestGamePointerLock() {
         const el = renderer.domElement;
         if (document.pointerLockElement !== el && el.requestPointerLock) {
@@ -741,26 +1135,23 @@
       });
 
       window.addEventListener('mousedown', e => {
+        if (IS_BENCH_MODE) return;
         if (engine && engine.state === 'playing' && !engine.is_paused) {
           if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
             requestGamePointerLock();
           }
         }
-        isMouseDown = true;
         prevMouseX = e.clientX;
         prevMouseY = e.clientY;
       });
 
-      window.addEventListener('mouseup', () => { isMouseDown = false; });
-
       window.addEventListener('mousemove', e => {
-        if (!engine || engine.state !== 'playing' || engine.is_paused) {
+        if (IS_BENCH_MODE || !engine || engine.state !== 'playing' || engine.is_paused) {
           prevMouseX = e.clientX;
           prevMouseY = e.clientY;
           return;
         }
-        let dx = 0;
-        let dy = 0;
+        let dx = 0, dy = 0;
         if (isPointerLocked) {
           dx = e.movementX || 0;
           dy = e.movementY || 0;
@@ -781,40 +1172,39 @@
 
     function createPlayerMesh() {
       playerMesh = new THREE.Group();
-
-      // Shirt (#E8E2D0)
-      const bodyGeo = new THREE.CylinderGeometry(0.36, 0.46, 1.15, 16);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xE8E2D0, roughness: 0.7 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.36, 0.46, 1.15, 16),
+        new THREE.MeshStandardMaterial({ color: 0xE8E2D0, roughness: 0.7 })
+      );
       body.position.y = 0.58;
       playerMesh.add(body);
 
-      // Scarf (#C8102E)
-      const scarfGeo = new THREE.TorusGeometry(0.36, 0.08, 10, 20);
-      const scarfMat = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.6 });
-      const scarf = new THREE.Mesh(scarfGeo, scarfMat);
+      const scarf = new THREE.Mesh(
+        new THREE.TorusGeometry(0.36, 0.08, 10, 20),
+        new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.6 })
+      );
       scarf.rotation.x = Math.PI / 2;
       scarf.position.y = 1.12;
       playerMesh.add(scarf);
 
-      // Head
-      const headGeo = new THREE.SphereGeometry(0.32, 16, 16);
-      const headMat = new THREE.MeshStandardMaterial({ color: 0xF5D5B8 });
-      const head = new THREE.Mesh(headGeo, headMat);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.32, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0xF5D5B8 })
+      );
       head.position.y = 1.38;
       playerMesh.add(head);
 
-      // Conical Hat (Nón lá #C9B48A)
-      const hatGeo = new THREE.ConeGeometry(0.85, 0.42, 24);
-      const hatMat = new THREE.MeshStandardMaterial({ color: 0xC9B48A, roughness: 0.8 });
-      const hat = new THREE.Mesh(hatGeo, hatMat);
+      const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.85, 0.42, 24),
+        new THREE.MeshStandardMaterial({ color: 0xC9B48A, roughness: 0.8 })
+      );
       hat.position.y = 1.68;
       playerMesh.add(hat);
 
-      // Small hanging lantern (#FFB347)
-      const miniGeo = new THREE.SphereGeometry(0.14, 12, 12);
-      const miniMat = new THREE.MeshBasicMaterial({ color: 0xFFB347 });
-      const mini = new THREE.Mesh(miniGeo, miniMat);
+      const mini = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xFFB347 })
+      );
       mini.position.set(0.45, 0.85, 0.35);
       playerMesh.add(mini);
 
@@ -826,19 +1216,15 @@
     }
 
     function clearDynamicMeshes() {
-      while (mapGroup.children.length > 0) {
-        mapGroup.remove(mapGroup.children[0]);
-      }
+      while (mapGroup.children.length > 0) mapGroup.remove(mapGroup.children[0]);
       lanternMeshes.forEach(l => scene.remove(l.group));
       lanternMeshes = [];
-      moteMeshes.forEach(m => scene.remove(m));
-      moteMeshes = [];
-      shadeMeshes.forEach(s => scene.remove(s.group));
-      shadeMeshes = [];
       drifterMeshes.forEach(d => scene.remove(d));
       drifterMeshes = [];
       charmMeshes.forEach(c => scene.remove(c));
       charmMeshes = [];
+      if (moteInstanced) moteInstanced.count = 0;
+      if (shadeInstanced) shadeInstanced.count = 0;
     }
 
     function buildNight3DMap(night) {
@@ -849,7 +1235,6 @@
       const padMat = new THREE.MeshBasicMaterial({ color: 0xF2C14E });
 
       if (night === 1) {
-        // Island radius 40m
         const cyl = new THREE.Mesh(new THREE.CylinderGeometry(40, 41, 6, 48), grassMat);
         cyl.position.y = -3;
         mapGroup.add(cyl);
@@ -857,7 +1242,6 @@
         rim.rotation.x = Math.PI / 2;
         mapGroup.add(rim);
       } else if (night === 2) {
-        // Two islands radius 28m at (0,0,0) and (70,0,0)
         for (const cx of [0, 70]) {
           const cyl = new THREE.Mesh(new THREE.CylinderGeometry(28, 29, 6, 40), grassMat);
           cyl.position.set(cx, -3, 0);
@@ -867,60 +1251,49 @@
           rim.position.set(cx, 0, 0);
           mapGroup.add(rim);
         }
-        // Bamboo bridge x in [26, 44], z in [-2, 2]
         const bridge = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 4), woodMat);
         bridge.position.set(35, -0.2, 0);
         mapGroup.add(bridge);
-
-        // Jump pads at (20,0,18) and (50,0,-18)
         for (const [px, pz] of [[20, 18], [50, -18]]) {
           const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.1, 0.25, 20), padMat);
           pad.position.set(px, 0.12, pz);
           mapGroup.add(pad);
         }
       } else if (night === 3) {
-        // Tier 0: radius 45m, Y=0
         const t0 = new THREE.Mesh(new THREE.CylinderGeometry(45, 46, 6, 56), grassMat);
         t0.position.y = -3;
         mapGroup.add(t0);
 
-        // Tier 1: annulus 12-24m in half z > 0, Y=3
         const shape = new THREE.Shape();
         shape.absarc(0, 0, 24, 0, Math.PI, false);
         shape.lineTo(-12, 0);
         shape.absarc(0, 0, 12, Math.PI, 0, true);
         shape.lineTo(24, 0);
-        const extrudeSettings = { depth: 3, bevelEnabled: false, curveSegments: 32 };
-        const t1Geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        const t1Mesh = new THREE.Mesh(t1Geo, sandMat);
+        const t1Mesh = new THREE.Mesh(
+          new THREE.ExtrudeGeometry(shape, { depth: 3, bevelEnabled: false, curveSegments: 32 }),
+          sandMat
+        );
         t1Mesh.rotation.x = Math.PI / 2;
         t1Mesh.position.y = 3;
         mapGroup.add(t1Mesh);
 
-        // 2 Ramps at 30° and 150°: r=30 (Y=0) to r=24 (Y=3), width 3m
         for (const deg of [30, 150]) {
           const rad = (deg * Math.PI) / 180;
-          const rampLen = Math.hypot(6, 3);
-          const rampGeo = new THREE.BoxGeometry(rampLen, 0.4, 3.0);
-          const rampMesh = new THREE.Mesh(rampGeo, woodMat);
-          const midR = 27.0;
-          rampMesh.position.set(Math.cos(rad) * midR, 1.5, Math.sin(rad) * midR);
+          const rampMesh = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(6, 3), 0.4, 3.0), woodMat);
+          rampMesh.position.set(Math.cos(rad) * 27.0, 1.5, Math.sin(rad) * 27.0);
           rampMesh.rotation.y = -rad;
           rampMesh.rotation.z = -Math.atan2(3, 6);
           mapGroup.add(rampMesh);
         }
 
-        // Jump pad at (0,3,13)
         const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.1, 0.25, 20), padMat);
         pad.position.set(0, 3.12, 13);
         mapGroup.add(pad);
 
-        // Tier 2: disc radius 8m at Y=6
         const t2 = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 6, 32), grassMat);
         t2.position.y = 3;
         mapGroup.add(t2);
 
-        // Bell tower: radius 2m, height 8m at center of Tier 2
         const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.0, 8, 24), woodMat);
         tower.position.y = 10;
         mapGroup.add(tower);
@@ -928,22 +1301,24 @@
 
       if (!engine) return;
 
-      // Build Lantern Meshes
       engine.lanterns.forEach(l => {
         const group = new THREE.Group();
         group.position.set(l.pos[0], l.pos[1], l.pos[2]);
 
-        const baseMat = new THREE.MeshStandardMaterial({ color: 0x5B5F6E, roughness: 0.7 });
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.45, 2.4, 12), baseMat);
+        const pillar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.28, 0.45, 2.4, 12),
+          new THREE.MeshStandardMaterial({ color: 0x5B5F6E, roughness: 0.7 })
+        );
         pillar.position.y = 1.2;
         group.add(pillar);
 
-        const coreMat = new THREE.MeshBasicMaterial({ color: 0x5B5F6E });
-        const core = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), coreMat);
+        const core = new THREE.Mesh(
+          new THREE.SphereGeometry(0.5, 16, 16),
+          new THREE.MeshBasicMaterial({ color: 0x5B5F6E })
+        );
         core.position.y = 2.6;
         group.add(core);
 
-        // Torn-paper patch: visible only on unlit lanterns (shape cue that does not rely on colour)
         const tear = new THREE.Mesh(
           new THREE.PlaneGeometry(0.35, 0.5),
           new THREE.MeshBasicMaterial({ color: 0x0E1430, side: THREE.DoubleSide })
@@ -952,13 +1327,13 @@
         tear.rotation.z = 0.5;
         group.add(tear);
 
-        // Fuel bar (background + fill), visible while the lantern is lit
         const fuelBg = new THREE.Mesh(
           new THREE.PlaneGeometry(1.7, 0.2),
           new THREE.MeshBasicMaterial({ color: 0x1B2350, side: THREE.DoubleSide })
         );
         fuelBg.position.y = 3.7;
         group.add(fuelBg);
+
         const fuelBar = new THREE.Mesh(
           new THREE.PlaneGeometry(1.6, 0.14),
           new THREE.MeshBasicMaterial({ color: 0xFFB347, side: THREE.DoubleSide })
@@ -967,10 +1342,10 @@
         fuelBar.position.z = 0.01;
         group.add(fuelBar);
 
-        // Safe zone ring (6m)
-        const safeRingGeo = new THREE.RingGeometry(5.85, 6.0, 48);
-        const safeRingMat = new THREE.MeshBasicMaterial({ color: 0xFFB347, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
-        const safeRing = new THREE.Mesh(safeRingGeo, safeRingMat);
+        const safeRing = new THREE.Mesh(
+          new THREE.RingGeometry(5.85, 6.0, 48),
+          new THREE.MeshBasicMaterial({ color: 0xFFB347, side: THREE.DoubleSide, transparent: true, opacity: 0.0 })
+        );
         safeRing.rotation.x = -Math.PI / 2;
         safeRing.position.y = 0.06;
         group.add(safeRing);
@@ -983,23 +1358,96 @@
         lanternMeshes.push({ group, core, light, safeRing, tear, fuelBg, fuelBar, data: l });
       });
 
-      // Build Charm Meshes
-      engine.charms.forEach(c => {
-        const cGeo = new THREE.BoxGeometry(0.45, 0.7, 0.08);
-        const cMat = new THREE.MeshBasicMaterial({ color: 0xC8102E });
-        const mesh = new THREE.Mesh(cGeo, cMat);
+      engine.charms.forEach(() => {
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(0.45, 0.7, 0.08),
+          new THREE.MeshBasicMaterial({ color: 0xC8102E })
+        );
         scene.add(mesh);
         charmMeshes.push(mesh);
       });
     }
 
+    // --- Benchmark Mode Setup & Execution ---
+    function startBenchmarkScene() {
+      document.getElementById('screen-menu').classList.add('hidden');
+      document.getElementById('hud').classList.add('hidden');
+      document.getElementById('bench-overlay').classList.remove('hidden');
+
+      engine = new GameEngine(contract, BENCH_SEED, 1);
+      engine.initBenchWorld();
+      buildNight3DMap(1);
+
+      playerMesh.position.set(0, 0, 0);
+      playerMesh.visible = true;
+      camera.position.set(30, 15, 0);
+      camera.lookAt(0, 0, 0);
+
+      benchState.startPerfMs = performance.now();
+      benchState.lastFramePerfMs = benchState.startPerfMs;
+    }
+
+    function getRendererDescription() {
+      let gpu = 'WebGL';
+      try {
+        const gl = renderer.getContext();
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        if (dbg) {
+          gpu = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || gpu;
+        }
+      } catch (_) {}
+      return `Three.js r${THREE.REVISION} WebGLRenderer (${gpu})`;
+    }
+
+    function finishBenchmark() {
+      if (benchState.done) return;
+      benchState.done = true;
+
+      const dts = benchState.dts;
+      const N = dts.length || 1;
+      const sumDt = dts.reduce((a, b) => a + b, 0) || 1;
+      const avgFps = (1000 * N) / sumDt;
+
+      const sortedDesc = [...dts].sort((a, b) => b - a);
+      const k = Math.max(1, Math.ceil(0.01 * N));
+      const topKMean = sortedDesc.slice(0, k).reduce((a, b) => a + b, 0) / k;
+      const p1LowFps = 1000 / (topKMean || 1);
+
+      const sortedAsc = [...dts].sort((a, b) => a - b);
+      const p95Idx = Math.min(N - 1, Math.max(0, Math.ceil(0.95 * N) - 1));
+      const frameMsP95 = sortedAsc[p95Idx] || 0;
+
+      const payload = {
+        avg_fps: avgFps,
+        p1_low_fps: p1LowFps,
+        frame_ms_p95: frameMsP95,
+        frames: N,
+        load_ms: benchState.loadMs,
+        renderer: getRendererDescription()
+      };
+
+      document.getElementById('bench-overlay').textContent =
+        `BENCHMARK DONE: ${avgFps.toFixed(1)} FPS (1% low: ${p1LowFps.toFixed(1)})`;
+
+      fetch('/__bench_done', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    }
+
     function startNightIntro(night) {
       sound.init();
       currentNight = night;
-      if (night === 1) totalCampaignScore = 0;
+      if (night === 1) {
+        totalCampaignScore = 0;
+        nightScores = { 1: 0, 2: 0, 3: 0 };
+        wonNights.clear();
+      }
       document.getElementById('screen-menu').classList.add('hidden');
       document.getElementById('screen-result').classList.add('hidden');
       document.getElementById('screen-pause').classList.add('hidden');
+      document.getElementById('screen-leaderboard').classList.add('hidden');
       document.getElementById('hud').classList.add('hidden');
 
       const info = NIGHT_INFO[night];
@@ -1017,13 +1465,16 @@
       document.getElementById('hud').classList.remove('hidden');
       document.getElementById('night-label').textContent = NIGHT_INFO[currentNight].name;
 
-      engine = new GameEngine(contract, Date.now() & 0xffffffff, currentNight);
+      currentSeed = (Date.now() & 0xffffffff) >>> 0;
+      engine = new GameEngine(contract, currentSeed, currentNight);
       engine.initDefaultWorld();
       camYaw = 0;
       camPitch = 25;
       prevMouseX = null;
       prevMouseY = null;
       lastCountdownSec = -1;
+      subtitleAlerts = [];
+      lastSpawnedShadePos = null;
       buildNight3DMap(currentNight);
     }
 
@@ -1040,9 +1491,96 @@
       }
     }
 
+    // --- Keybind UI ---
+    function renderKeybindGrid() {
+      const grid = document.getElementById('keybind-grid');
+      grid.innerHTML = '';
+      for (const action of Object.keys(ACTION_LABELS)) {
+        const row = document.createElement('div');
+        row.className = 'keybind-item';
+        const lbl = document.createElement('span');
+        lbl.textContent = ACTION_LABELS[action];
+        const btn = document.createElement('button');
+        btn.className = 'keybind-btn' + (listeningAction === action ? ' listening' : '');
+        btn.textContent = listeningAction === action ? 'Nhấn phím...' : formatKeyLabel(userSettings.keybinds[action]);
+        btn.addEventListener('click', () => {
+          listeningAction = action;
+          document.getElementById('keybind-warning').textContent = '';
+          renderKeybindGrid();
+        });
+        row.appendChild(lbl);
+        row.appendChild(btn);
+        grid.appendChild(row);
+      }
+    }
+
+    function handleKeybindCapture(action, newKey) {
+      const warnEl = document.getElementById('keybind-warning');
+      // Check duplicate key across other actions
+      for (const [otherAction, boundKey] of Object.entries(userSettings.keybinds)) {
+        if (otherAction !== action && boundKey === newKey) {
+          warnEl.textContent = `⚠ Phím [${formatKeyLabel(newKey)}] đã được gán cho "${ACTION_LABELS[otherAction]}"! Hãy chọn phím khác.`;
+          listeningAction = null;
+          renderKeybindGrid();
+          return;
+        }
+      }
+      userSettings.keybinds[action] = newKey;
+      listeningAction = null;
+      warnEl.textContent = '';
+      saveSettings();
+      updateControlHints();
+      renderKeybindGrid();
+    }
+
+    // --- Leaderboard API & UI ---
+    async function fetchLeaderboardEntries() {
+      try {
+        const res = await fetch('/api/leaderboard');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.entries)) {
+            localStorage.setItem('dao_den_long_lb_cache', JSON.stringify(data.entries));
+            return data.entries;
+          }
+        }
+      } catch (_) {}
+      try {
+        return JSON.parse(localStorage.getItem('dao_den_long_lb_cache') || '[]');
+      } catch (_) {
+        return [];
+      }
+    }
+
+    async function openLeaderboardScreen() {
+      document.getElementById('screen-menu').classList.add('hidden');
+      document.getElementById('screen-result').classList.add('hidden');
+      document.getElementById('screen-leaderboard').classList.remove('hidden');
+
+      const tbody = document.getElementById('lb-tbody');
+      tbody.innerHTML = '<tr><td colspan="5">Đang tải...</td></tr>';
+      const entries = await fetchLeaderboardEntries();
+      if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Chưa có kỷ lục nào. Hãy chơi để ghi danh!</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      entries.forEach((e, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${idx + 1}</td><td><b>${e.name}</b></td><td>★ ${e.score}</td><td>${e.nights_won}/3</td><td>${e.seed}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
     function setupUIHandlers() {
       document.getElementById('btn-play-campaign').addEventListener('click', () => startNightIntro(1));
       document.getElementById('btn-start-night').addEventListener('click', () => launchCurrentNight());
+      document.getElementById('btn-open-leaderboard').addEventListener('click', () => openLeaderboardScreen());
+      document.getElementById('btn-res-lb').addEventListener('click', () => openLeaderboardScreen());
+      document.getElementById('btn-close-leaderboard').addEventListener('click', () => {
+        document.getElementById('screen-leaderboard').classList.add('hidden');
+        document.getElementById('screen-menu').classList.remove('hidden');
+      });
 
       document.getElementById('btn-resume').addEventListener('click', () => togglePauseGame());
       document.getElementById('btn-replay-pause').addEventListener('click', () => launchCurrentNight());
@@ -1073,24 +1611,55 @@
 
       const cbBox = document.getElementById('input-colorblind');
       cbBox.checked = userSettings.colorblind;
-      document.body.classList.toggle('colorblind', userSettings.colorblind);
       cbBox.addEventListener('change', () => {
         userSettings.colorblind = cbBox.checked;
-        document.body.classList.toggle('colorblind', userSettings.colorblind);
+        applyAccessibilityClasses();
         saveSettings();
+      });
+
+      const rmBox = document.getElementById('input-reduce-motion');
+      rmBox.checked = userSettings.reduceMotion;
+      rmBox.addEventListener('change', () => {
+        userSettings.reduceMotion = rmBox.checked;
+        applyAccessibilityClasses();
+        saveSettings();
+      });
+
+      const ltBox = document.getElementById('input-large-text');
+      ltBox.checked = userSettings.largeText;
+      ltBox.addEventListener('change', () => {
+        userSettings.largeText = ltBox.checked;
+        applyAccessibilityClasses();
+        saveSettings();
+      });
+
+      document.getElementById('btn-reset-keybinds').addEventListener('click', () => {
+        userSettings.keybinds = { ...DEFAULT_KEYBINDS };
+        listeningAction = null;
+        document.getElementById('keybind-warning').textContent = 'Đã khôi phục phím mặc định.';
+        saveSettings();
+        updateControlHints();
+        renderKeybindGrid();
       });
 
       document.getElementById('btn-open-settings-menu').addEventListener('click', () => {
         settingsReturnTo = 'menu';
+        listeningAction = null;
+        document.getElementById('keybind-warning').textContent = '';
+        renderKeybindGrid();
         document.getElementById('screen-menu').classList.add('hidden');
         document.getElementById('screen-settings').classList.remove('hidden');
       });
       document.getElementById('btn-settings-pause').addEventListener('click', () => {
         settingsReturnTo = 'pause';
+        listeningAction = null;
+        document.getElementById('keybind-warning').textContent = '';
+        renderKeybindGrid();
         document.getElementById('screen-pause').classList.add('hidden');
         document.getElementById('screen-settings').classList.remove('hidden');
       });
       document.getElementById('btn-close-settings').addEventListener('click', () => {
+        listeningAction = null;
         document.getElementById('screen-settings').classList.add('hidden');
         if (settingsReturnTo === 'pause') {
           document.getElementById('screen-pause').classList.remove('hidden');
@@ -1105,6 +1674,38 @@
         document.getElementById('hud').classList.add('hidden');
         document.getElementById('screen-menu').classList.remove('hidden');
       });
+
+      document.getElementById('btn-save-score').addEventListener('click', async () => {
+        const nameInput = document.getElementById('input-player-name');
+        const msgEl = document.getElementById('lb-save-msg');
+        const name = nameInput.value.trim();
+        const nameRegex = /^[A-Za-z0-9_\u00C0-\u024F\u1E00-\u1EFF]{3,12}$/;
+        if (!nameRegex.test(name)) {
+          msgEl.style.color = 'var(--col-danger)';
+          msgEl.textContent = 'Tên phải dài 3–12 ký tự (chữ, số hoặc dấu _).';
+          return;
+        }
+        try {
+          const res = await fetch('/api/leaderboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name,
+              score: totalCampaignScore,
+              nights_won: wonNights.size,
+              seed: currentSeed
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Lỗi lưu điểm');
+          msgEl.style.color = '#80ffaa';
+          msgEl.textContent = '✓ Đã lưu vào Bảng Xếp Hạng!';
+          document.getElementById('btn-save-score').disabled = true;
+        } catch (err) {
+          msgEl.style.color = 'var(--col-danger)';
+          msgEl.textContent = err.message;
+        }
+      });
     }
 
     function handleGameOver() {
@@ -1114,21 +1715,31 @@
       const won = engine.state === 'won';
       document.getElementById('hud').classList.add('hidden');
       document.getElementById('offscreen-arrow').classList.add('hidden');
+      document.getElementById('shade-arrow').classList.add('hidden');
       const resScreen = document.getElementById('screen-result');
       resScreen.classList.remove('hidden');
+
+      const lbBox = document.getElementById('lb-save-box');
+      const saveBtn = document.getElementById('btn-save-score');
+      const saveMsg = document.getElementById('lb-save-msg');
+      saveBtn.disabled = false;
+      saveMsg.textContent = '';
 
       const nextBtn = document.getElementById('btn-res-next');
       if (won) {
         sound.playWin();
+        wonNights.add(currentNight);
         nightScores[currentNight] = engine.score;
         totalCampaignScore = nightScores[1] + nightScores[2] + nightScores[3];
         if (currentNight < 3) {
+          lbBox.classList.add('hidden');
           document.getElementById('res-title').textContent = `🎉 THẮNG ĐÊM ${currentNight}!`;
           document.getElementById('res-subtitle').textContent = `Điểm Đêm ${currentNight}: ${engine.score} · Tổng điểm: ${totalCampaignScore}`;
           document.getElementById('res-desc').textContent = 'Bình minh lên và đảo vẫn sáng đèn. Ánh sáng ấm áp đã xua tan sương đen! Hãy chuẩn bị bước sang hòn đảo tiếp theo!';
           nextBtn.textContent = `SANG ĐÊM ${currentNight + 1}`;
           nextBtn.onclick = () => startNightIntro(currentNight + 1);
         } else {
+          lbBox.classList.remove('hidden');
           document.getElementById('res-title').textContent = '🌅 BÌNH MINH ĐÃ LÊN!';
           document.getElementById('res-subtitle').textContent = `TỔNG ĐIỂM CHIẾN THẮNG 3 ĐÊM: ${totalCampaignScore}`;
           document.getElementById('res-desc').textContent = 'Chúc mừng Mây! Cả ba hòn đảo Đảo Bến, Đảo Cau và Đảo Chuông đã rực sáng trong ánh bình minh rực rỡ!';
@@ -1137,8 +1748,9 @@
         }
       } else {
         sound.playLose();
+        lbBox.classList.remove('hidden');
         document.getElementById('res-title').textContent = '💀 SƯƠNG ĐEN BỦA VÂY';
-        document.getElementById('res-subtitle').textContent = `Điểm đạt được: ${engine.score}`;
+        document.getElementById('res-subtitle').textContent = `Tổng điểm các Đêm đã thắng: ${totalCampaignScore} (Đêm ${currentNight}: ${engine.score})`;
         document.getElementById('res-desc').textContent = engine.reason === 'no_flames'
           ? 'Ngọn lửa của Mây đã tắt hết trước sức ép của Bóng Mực. Đừng bỏ cuộc!'
           : 'Bình minh đã tới nhưng số đèn còn sáng chưa đủ ngưỡng để giữ đảo.';
@@ -1147,20 +1759,149 @@
       }
     }
 
-    function gameLoop() {
+    function updateInstancedEntities() {
+      // Motes
+      const moteCount = Math.min(engine.motes.length, 150);
+      moteInstanced.count = moteCount;
+      const nowSec = performance.now() * 0.005;
+      for (let i = 0; i < moteCount; i++) {
+        const m = engine.motes[i];
+        const bob = Math.sin(nowSec + i) * 0.12;
+        dummyObj.position.set(m.pos[0], m.pos[1] + 0.4 + bob, m.pos[2]);
+        dummyObj.scale.set(1, 1, 1);
+        dummyObj.updateMatrix();
+        moteInstanced.setMatrixAt(i, dummyObj.matrix);
+        tempColor.setHex(m.kind === 'dropped' ? 0xFFE58A : 0xFFF6C2);
+        moteInstanced.setColorAt(i, tempColor);
+      }
+      moteInstanced.instanceMatrix.needsUpdate = true;
+      if (moteInstanced.instanceColor) moteInstanced.instanceColor.needsUpdate = true;
+
+      // Shades
+      const shadeCount = Math.min(engine.shades.length, 250);
+      shadeInstanced.count = shadeCount;
+      shadeInstanced.material.emissive.setHex(userSettings.colorblind ? 0x00B3FF : 0x7A3CFF);
+      for (let i = 0; i < shadeCount; i++) {
+        const s = engine.shades[i];
+        dummyObj.position.set(s.pos[0], s.pos[1] + 0.8, s.pos[2]);
+        dummyObj.scale.set(1, 1, 1);
+        dummyObj.updateMatrix();
+        shadeInstanced.setMatrixAt(i, dummyObj.matrix);
+        tempColor.setHex(s.state === 'stunned' ? 0x3A3450 : 0x120A1A);
+        shadeInstanced.setColorAt(i, tempColor);
+      }
+      shadeInstanced.instanceMatrix.needsUpdate = true;
+      if (shadeInstanced.instanceColor) shadeInstanced.instanceColor.needsUpdate = true;
+    }
+
+    function updateLanternVisuals() {
+      const litCount = engine.lanterns.filter(l => l.lit).length;
+      const totalLanterns = engine.lanterns.length || 1;
+      ambientLight.intensity = 0.15 + 0.55 * (litCount / totalLanterns);
+
+      lanternMeshes.forEach(lm => {
+        const fuel = Math.max(0, lm.data.fuel_u) / 60;
+        const blinkOn = userSettings.reduceMotion ? true : (Math.floor(Date.now() / 500) % 2 === 0);
+        const lowFuel = lm.data.lit && fuel < 30;
+        const visibleNow = !lowFuel || blinkOn;
+        lm.fuelBg.quaternion.copy(camera.quaternion);
+        lm.fuelBar.quaternion.copy(camera.quaternion);
+        lm.core.scale.set(1, lm.data.lit ? 1 : 0.8, 1);
+        lm.tear.visible = !lm.data.lit;
+        lm.fuelBg.visible = lm.data.lit && visibleNow;
+        lm.fuelBar.visible = lm.data.lit && visibleNow;
+        if (lm.data.lit) {
+          lm.core.material.color.setHex(0xFFE9B0);
+          lm.core.visible = visibleNow;
+          lm.light.intensity = visibleNow ? 2.6 : 0.8;
+          lm.safeRing.material.opacity = fuel >= 30 ? 0.35 : 0.0;
+          const ratio = Math.min(1, fuel / 100);
+          lm.fuelBar.scale.x = Math.max(0.001, ratio);
+        } else {
+          lm.core.material.color.setHex(0x5B5F6E);
+          lm.core.visible = true;
+          lm.light.intensity = 0.15;
+          lm.safeRing.material.opacity = 0.0;
+        }
+      });
+    }
+
+    function positionEdgeArrow(arrowEl, worldPos) {
+      const targetVec = new THREE.Vector3(worldPos[0], worldPos[1] + 1.5, worldPos[2]);
+      targetVec.project(camera);
+      const isBehind = targetVec.z > 1.0;
+      const ndcX = isBehind ? -targetVec.x : targetVec.x;
+      const ndcY = isBehind ? -targetVec.y : targetVec.y;
+      if (isBehind || Math.abs(ndcX) > 0.90 || Math.abs(ndcY) > 0.90) {
+        arrowEl.classList.remove('hidden');
+        const angle = Math.atan2(-ndcY, ndcX);
+        const halfW = window.innerWidth / 2 - 48;
+        const halfH = window.innerHeight / 2 - 48;
+        const edgeX = window.innerWidth / 2 + Math.cos(angle) * Math.min(halfW, halfH * 1.3);
+        const edgeY = window.innerHeight / 2 + Math.sin(angle) * Math.min(halfH, halfW);
+        arrowEl.style.left = `${edgeX - 24}px`;
+        arrowEl.style.top = `${edgeY - 24}px`;
+        arrowEl.style.transform = `rotate(${(angle * 180) / Math.PI}deg)`;
+      } else {
+        arrowEl.classList.add('hidden');
+      }
+    }
+
+    function gameLoop(nowMs) {
       requestAnimationFrame(gameLoop);
 
-      if (engine && engine.state === 'playing' && !engine.is_paused) {
-        let mx = 0, mz = 0;
-        if (keys['w'] || keys['arrowup']) mz += 1;
-        if (keys['s'] || keys['arrowdown']) mz -= 1;
-        if (keys['a'] || keys['arrowleft']) mx += 1;
-        if (keys['d'] || keys['arrowright']) mx -= 1;
+      // --- BENCHMARK LOOP ---
+      if (IS_BENCH_MODE && engine && !benchState.done) {
+        const dtMs = Math.max(0.1, nowMs - benchState.lastFramePerfMs);
+        benchState.lastFramePerfMs = nowMs;
+        const elapsedS = (nowMs - benchState.startPerfMs) / 1000;
 
-        const jump = !!keys[' '];
-        const interact = !!keys['e'];
-        const pulse = !!keys['f'];
-        const dash = !!keys['shift'];
+        // Camera orbit: center (0,0,0), radius 30m, Y=15m, start (30,15,0), CCW from top-down, 15s/rev
+        const angle = (elapsedS / 15.0) * Math.PI * 2;
+        camera.position.set(30.0 * Math.cos(angle), 15.0, -30.0 * Math.sin(angle));
+        camera.lookAt(0, 0, 0);
+
+        engine.stepBench(Math.min(0.05, dtMs / 1000));
+        updateLanternVisuals();
+        updateInstancedEntities();
+        renderer.render(scene, camera);
+
+        if (!benchState.firstFrameRecorded) {
+          benchState.firstFrameRecorded = true;
+          benchState.loadMs = Math.max(1, Date.now() - BENCH_START_TS);
+        }
+
+        if (elapsedS >= 3.0) {
+          if (!benchState.measuring) {
+            benchState.measuring = true;
+            document.getElementById('bench-overlay').textContent = `BENCHMARK MEASURING (${BENCH_DURATION_S}s)...`;
+          } else {
+            benchState.dts.push(dtMs);
+          }
+          const measElapsed = elapsedS - 3.0;
+          if (measElapsed >= BENCH_DURATION_S) {
+            finishBenchmark();
+          }
+        } else if (!benchState.warmupLabelSet) {
+          benchState.warmupLabelSet = true;
+          document.getElementById('bench-overlay').textContent = 'BENCHMARK WARMUP (3s)...';
+        }
+        return;
+      }
+
+      // --- NORMAL GAMEPLAY LOOP ---
+      if (engine && engine.state === 'playing' && !engine.is_paused) {
+        const kb = userSettings.keybinds;
+        let mx = 0, mz = 0;
+        if (keys[kb.up] || keys['arrowup']) mz += 1;
+        if (keys[kb.down] || keys['arrowdown']) mz -= 1;
+        if (keys[kb.left] || keys['arrowleft']) mx += 1;
+        if (keys[kb.right] || keys['arrowright']) mx -= 1;
+
+        const jump = !!keys[kb.jump];
+        const interact = !!keys[kb.interact];
+        const pulse = !!keys[kb.pulse];
+        const dash = !!keys[kb.dash];
 
         const events = engine.step({
           move: [mx, mz],
@@ -1172,28 +1913,56 @@
           pause: false
         });
 
+        const jumpEdge = jump && !prevInputButtons.jump;
         prevInputButtons.jump = jump;
         prevInputButtons.interact = interact;
         prevInputButtons.pulse = pulse;
         prevInputButtons.dash = dash;
 
-        // Play audio for events
         for (const ev of events) {
           if (ev.name === 'mote_picked' || ev.name === 'charm_picked') sound.playPickup();
-          else if (ev.name === 'deposit') sound.playDeposit();
+          else if (ev.name === 'deposit' || ev.name === 'refuel') sound.playDeposit();
           else if (ev.name === 'lantern_lit') sound.playLanternLit();
-          else if (ev.name === 'pulse') sound.playPulse();
-          else if (ev.name === 'player_hit') sound.playHit();
-          else if (ev.name === 'dash') sound.playDash();
-          else if (ev.name === 'shade_spawned') sound.playShadeSpawn();
+          else if (ev.name === 'pulse') {
+            sound.playPulse();
+            triggerScreenFlash('rgba(255, 233, 176, 0.7)');
+          } else if (ev.name === 'player_hit') {
+            sound.playHit();
+            if (!userSettings.reduceMotion) cameraShakeTicks = 14;
+            triggerScreenFlash('rgba(255, 90, 95, 0.75)');
+          } else if (ev.name === 'dash') sound.playDash();
+          else if (ev.name === 'shade_spawned') {
+            sound.playShadeSpawn();
+            pushSubtitle('shade_spawn', '⚠ Bóng Mực xuất hiện!', true, 3000);
+            if (ev.data && Array.isArray(ev.data.pos)) {
+              lastSpawnedShadePos = ev.data.pos;
+              lastSpawnedShadeUntil = Date.now() + 4500;
+            }
+          } else if (ev.name === 'lantern_out') {
+            pushSubtitle('lantern_out', `⚠ Đèn ${ev.data.lantern_id} đã cạn dầu và tắt!`, true, 3500);
+          }
         }
-        if (jump && !prevInputButtons.jump && engine.player.vel[1] > 0) sound.playJump();
+        if (jumpEdge && engine.player.vel[1] > 0) sound.playJump();
 
-        // Countdown last 10s audio
+        // Accessibility visual alerts: last 10s, wind warning, low fuel lanterns
         const secLeft = Math.ceil(engine.time_left_s);
-        if (secLeft <= 10 && secLeft > 0 && secLeft !== lastCountdownSec) {
-          lastCountdownSec = secLeft;
-          sound.playCountdown();
+        if (secLeft <= 10 && secLeft > 0) {
+          pushSubtitle('last_10s', `⏱ Chỉ còn ${secLeft} giây tới bình minh!`, true, 1200);
+          if (secLeft !== lastCountdownSec) {
+            lastCountdownSec = secLeft;
+            sound.playCountdown();
+          }
+        }
+        if (engine.wind_enabled) {
+          const cycle = engine.sim_tick % 1800;
+          if (engine.sim_tick >= 1680 && cycle >= 1680 && !engine.wind.active) {
+            pushSubtitle('wind_warn', '🍃 Cảnh báo: Gió mạnh sắp thổi!', false, 1500);
+          }
+        }
+        const lowFuelLanterns = engine.lanterns.filter(l => l.lit && l.fuel_u < engine.LOW_FUEL_U);
+        if (lowFuelLanterns.length > 0) {
+          const ids = lowFuelLanterns.map(l => l.id).join(', ');
+          pushSubtitle('low_fuel', `⚠ Đèn sắp cạn dầu (<30%): ${ids}`, true, 1200);
         }
 
         updateVisualsAndHUD();
@@ -1209,122 +1978,50 @@
     }
 
     function updateVisualsAndHUD() {
-      // Ambient light scales with lantern progress: 0.15 + 0.55 * (lit / total)
-      const litCount = engine.lanterns.filter(l => l.lit).length;
-      const totalLanterns = engine.lanterns.length || 1;
-      ambientLight.intensity = 0.15 + 0.55 * (litCount / totalLanterns);
+      updateLanternVisuals();
+      updateInstancedEntities();
 
-      // Update Player Mesh
+      // Player Mesh
       playerMesh.position.set(engine.player.pos[0], engine.player.pos[1], engine.player.pos[2]);
       playerMesh.visible = engine.player.respawn_ticks === 0 && (engine.player.invuln_ticks % 6 < 4);
-      const faceAngle = Math.atan2(engine.player.facing[0], engine.player.facing[1]);
-      playerMesh.rotation.y = faceAngle;
+      playerMesh.rotation.y = Math.atan2(engine.player.facing[0], engine.player.facing[1]);
 
-      // Update Third-Person Camera with Yaw & Pitch
+      // Camera with optional shake (disabled in Reduce Motion)
       const theta = (camYaw * Math.PI) / 180;
       const phi = (camPitch * Math.PI) / 180;
       const camDist = 10.0;
       const horizDist = camDist * Math.cos(phi);
       const camHeight = Math.max(1.5, camDist * Math.sin(phi));
-
+      let shakeX = 0, shakeY = 0;
+      if (cameraShakeTicks > 0 && !userSettings.reduceMotion) {
+        cameraShakeTicks--;
+        shakeX = (Math.random() - 0.5) * 0.45;
+        shakeY = (Math.random() - 0.5) * 0.45;
+      }
       camera.position.set(
-        engine.player.pos[0] - Math.sin(theta) * horizDist,
-        engine.player.pos[1] + camHeight,
+        engine.player.pos[0] - Math.sin(theta) * horizDist + shakeX,
+        engine.player.pos[1] + camHeight + shakeY,
         engine.player.pos[2] - Math.cos(theta) * horizDist
       );
       camera.lookAt(engine.player.pos[0], engine.player.pos[1] + 1.2, engine.player.pos[2]);
 
-      // Update Lanterns
-      lanternMeshes.forEach(lm => {
-        const fuel = Math.max(0, lm.data.fuel_u) / 60;
-        const blinkOn = Math.floor(Date.now() / 500) % 2 === 0; // 1 Hz blink
-        const lowFuel = lm.data.lit && fuel < 30;
-        const visibleNow = !lowFuel || blinkOn;
-        lm.fuelBg.quaternion.copy(camera.quaternion);
-        lm.fuelBar.quaternion.copy(camera.quaternion);
-        lm.core.scale.set(1, lm.data.lit ? 1 : 0.8, 1); // unlit lanterns are 20% deflated
-        lm.tear.visible = !lm.data.lit;
-        lm.fuelBg.visible = lm.data.lit && visibleNow;
-        lm.fuelBar.visible = lm.data.lit && visibleNow;
-        if (lm.data.lit) {
-          lm.core.material.color.setHex(0xFFE9B0);
-          lm.core.visible = visibleNow;
-          lm.light.intensity = visibleNow ? 2.6 : 0.8;
-          lm.safeRing.material.opacity = fuel >= 30 ? 0.35 : 0.0; // no safe zone below 30 fuel
-          const ratio = Math.min(1, fuel / 100);
-          lm.fuelBar.scale.x = Math.max(0.001, ratio);
-          lm.fuelBar.position.x = 0;
-        } else {
-          lm.core.material.color.setHex(0x5B5F6E);
-          lm.core.visible = true;
-          lm.light.intensity = 0.15;
-          lm.safeRing.material.opacity = 0.0;
-        }
-      });
-
-      // Update Motes (#FFF6C2 / #FFE58A)
-      while (moteMeshes.length < engine.motes.length) {
-        const mGeo = new THREE.SphereGeometry(0.22, 10, 10);
-        const mMat = new THREE.MeshBasicMaterial({ color: 0xFFF6C2 });
-        const mMesh = new THREE.Mesh(mGeo, mMat);
-        scene.add(mMesh);
-        moteMeshes.push(mMesh);
-      }
-      while (moteMeshes.length > engine.motes.length) {
-        scene.remove(moteMeshes.pop());
-      }
-      for (let i = 0; i < engine.motes.length; i++) {
-        const m = engine.motes[i];
-        const bob = Math.sin(Date.now() * 0.005 + i) * 0.12;
-        moteMeshes[i].position.set(m.pos[0], m.pos[1] + 0.4 + bob, m.pos[2]);
-        moteMeshes[i].material.color.setHex(m.kind === 'dropped' ? 0xFFE58A : 0xFFF6C2);
-      }
-
-      // Update Shades (#120A1A / #7A3CFF / #3A3450)
-      while (shadeMeshes.length < engine.shades.length) {
-        const group = new THREE.Group();
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x120A1A, emissive: 0x7A3CFF, emissiveIntensity: 0.25 });
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.75, 14, 14), bodyMat);
-        body.position.y = 0.8;
-        group.add(body);
-        scene.add(group);
-        shadeMeshes.push({ group, body });
-      }
-      while (shadeMeshes.length > engine.shades.length) {
-        scene.remove(shadeMeshes.pop().group);
-      }
-      for (let i = 0; i < engine.shades.length; i++) {
-        const s = engine.shades[i];
-        const sm = shadeMeshes[i];
-        sm.group.position.set(s.pos[0], s.pos[1], s.pos[2]);
-        sm.body.material.emissive.setHex(userSettings.colorblind ? 0x00B3FF : 0x7A3CFF);
-        if (s.state === 'stunned') {
-          sm.body.material.color.setHex(0x3A3450);
-          sm.body.material.emissiveIntensity = 0.05;
-        } else {
-          sm.body.material.color.setHex(0x120A1A);
-          sm.body.material.emissiveIntensity = 0.35;
-        }
-      }
-
-      // Update Drifters (Gió Lạc #8FA3B8)
+      // Drifters
       while (drifterMeshes.length < engine.drifters.length) {
-        const dGeo = new THREE.TorusGeometry(0.55, 0.15, 10, 24);
-        const dMat = new THREE.MeshBasicMaterial({ color: 0x8FA3B8 });
-        const dMesh = new THREE.Mesh(dGeo, dMat);
+        const dMesh = new THREE.Mesh(
+          new THREE.TorusGeometry(0.55, 0.15, 10, 24),
+          new THREE.MeshBasicMaterial({ color: 0x8FA3B8 })
+        );
         scene.add(dMesh);
         drifterMeshes.push(dMesh);
       }
-      while (drifterMeshes.length > engine.drifters.length) {
-        scene.remove(drifterMeshes.pop());
-      }
+      while (drifterMeshes.length > engine.drifters.length) scene.remove(drifterMeshes.pop());
       for (let i = 0; i < engine.drifters.length; i++) {
         const d = engine.drifters[i];
         drifterMeshes[i].position.set(d.pos[0], d.pos[1] + 1.1, d.pos[2]);
         drifterMeshes[i].rotation.y += 0.08;
       }
 
-      // Update Charms (Bùa Gió #C8102E)
+      // Charms
       for (let i = 0; i < engine.charms.length && i < charmMeshes.length; i++) {
         const c = engine.charms[i];
         charmMeshes[i].visible = c.available;
@@ -1332,59 +2029,42 @@
         charmMeshes[i].rotation.y += 0.04;
       }
 
-      // --- Update HUD ---
-      // 1. Flames
-      const flamePips = document.querySelectorAll('#ui-flames .flame-pip');
-      flamePips.forEach((pip, idx) => {
-        if (idx < engine.player.flames) pip.classList.remove('lost');
-        else pip.classList.add('lost');
+      // HUD
+      const litCount = engine.lanterns.filter(l => l.lit).length;
+      const totalLanterns = engine.lanterns.length || 1;
+      document.querySelectorAll('#ui-flames .flame-pip').forEach((pip, idx) => {
+        pip.classList.toggle('lost', idx >= engine.player.flames);
       });
 
-      // 2. Clock mm:ss
       const totalSec = Math.max(0, Math.ceil(engine.time_left_s));
       const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
       const ss = String(totalSec % 60).padStart(2, '0');
       const clockEl = document.getElementById('ui-clock');
       clockEl.textContent = (userSettings.colorblind && totalSec <= 30 ? '⚠ ' : '') + `${mm}:${ss}`;
-      if (totalSec <= 30) clockEl.classList.add('danger');
-      else clockEl.classList.remove('danger');
+      clockEl.classList.toggle('danger', totalSec <= 30);
 
-      // Status banner (Charm / Wind)
       const statusParts = [];
-      if (engine.player.charm_ticks > 0) {
-        statusParts.push(`🧧 Bùa Gió: ${(engine.player.charm_ticks / 60).toFixed(1)}s`);
-      }
-      if (engine.wind_enabled) {
-        const cycle = engine.sim_tick % 1800;
-        if (engine.wind.active) {
-          statusParts.push(`🍃 GIÓ MẠNH (${Math.round(engine.wind.dir_deg)}°)`);
-        } else if (engine.sim_tick >= 1680 && cycle >= 1680) {
-          statusParts.push(`⚠️ Sắp có gió mạnh!`);
-        }
-      }
+      if (engine.player.charm_ticks > 0) statusParts.push(`🧧 Bùa Gió: ${(engine.player.charm_ticks / 60).toFixed(1)}s`);
+      if (engine.wind_enabled && engine.wind.active) statusParts.push(`🍃 GIÓ MẠNH (${Math.round(engine.wind.dir_deg)}°)`);
       document.getElementById('ui-status-banner').textContent = statusParts.join(' · ');
 
-      // 3. Lanterns & Score
       const needLit = Math.ceil(0.6 * totalLanterns - 1e-9);
       document.getElementById('ui-lanterns').textContent = `${litCount}/${totalLanterns} (cần ${needLit})`;
       document.getElementById('ui-score').textContent = engine.score;
 
-      // 4. 10-slot Mote bar
       const slots = moteBarEl.children;
       const capNow = engine.getCapacity();
       for (let i = 0; i < 20; i++) {
         slots[i].style.display = i < capNow ? 'flex' : 'none';
-        if (i < engine.player.carried) slots[i].classList.add('filled');
-        else slots[i].classList.remove('filled');
+        slots[i].classList.toggle('filled', i < engine.player.carried);
       }
       document.getElementById('mote-count').textContent = `${engine.player.carried} / ${capNow}`;
 
-      // 5. Cooldown icons
       const dashBox = document.getElementById('skill-dash');
       const dashCdEl = document.getElementById('ui-dash-cd');
       if (engine.player.charm_ticks > 0) {
         dashBox.classList.remove('disabled');
-        dashCdEl.textContent = '0.0s (Bùa)';
+        dashCdEl.textContent = '0.0s';
         dashCdEl.style.color = '#F2C14E';
       } else if (engine.player.dash_cd_ticks > 0) {
         dashBox.classList.add('disabled');
@@ -1412,67 +2092,58 @@
         pulseCdEl.style.color = '#80ffaa';
       }
 
-      // 6. Interact prompt "E — Nạp ánh sáng (x/10)" when within 2.0m of nearest unlit lantern
-      let nearestUnlit = null;
-      let nearestUnlitDist = Infinity;
+      // Interact prompt
+      const promptEl = document.getElementById('interact-prompt');
+      let recvTarget = null, recvDist = Infinity;
+      let nearestUnlit = null, nearestUnlitDist = Infinity;
       for (const l of engine.lanterns) {
-        if (!l.lit) {
-          const d = Math.hypot(l.pos[0] - engine.player.pos[0], l.pos[2] - engine.player.pos[2]);
-          if (d < nearestUnlitDist) {
-            nearestUnlitDist = d;
-            nearestUnlit = l;
+        const d = Math.hypot(l.pos[0] - engine.player.pos[0], l.pos[2] - engine.player.pos[2]);
+        if (!l.lit && d < nearestUnlitDist) {
+          nearestUnlitDist = d;
+          nearestUnlit = l;
+        }
+        if (!(l.lit && l.fuel_u >= engine.FUEL_MAX_U)) {
+          if (d <= 2.0 && Math.abs(l.pos[1] - engine.player.pos[1]) <= 2.0 && d < recvDist) {
+            recvDist = d;
+            recvTarget = l;
           }
         }
       }
-
-      const promptEl = document.getElementById('interact-prompt');
-      let recvTarget = null;
-      let recvDist = Infinity;
-      for (const l of engine.lanterns) {
-        if (l.lit && l.fuel_u >= engine.FUEL_MAX_U) continue;
-        const d = Math.hypot(l.pos[0] - engine.player.pos[0], l.pos[2] - engine.player.pos[2]);
-        if (d <= 2.0 && Math.abs(l.pos[1] - engine.player.pos[1]) <= 2.0 && d < recvDist) {
-          recvDist = d;
-          recvTarget = l;
-        }
-      }
+      const keyInt = formatKeyLabel(userSettings.keybinds.interact);
       if (recvTarget) {
         if (recvTarget.lit) {
-          promptEl.textContent = `E — Châm dầu (${Math.floor(recvTarget.fuel_u / 60)}/100)`;
+          promptEl.textContent = `${keyInt} — Châm dầu (${Math.floor(recvTarget.fuel_u / 60)}/100)`;
         } else {
           const cost = recvTarget.ever_lit ? contract.tuning.relight_cost : contract.tuning.lantern_cost;
-          promptEl.textContent = `E — Nạp ánh sáng (${recvTarget.deposited}/${cost})`;
+          promptEl.textContent = `${keyInt} — Nạp ánh sáng (${recvTarget.deposited}/${cost})`;
         }
         promptEl.classList.remove('hidden');
       } else {
         promptEl.classList.add('hidden');
       }
 
-      // 7. Offscreen arrow pointing to nearest unlit lantern
-      const arrowEl = document.getElementById('offscreen-arrow');
-      if (nearestUnlit) {
-        const targetVec = new THREE.Vector3(nearestUnlit.pos[0], nearestUnlit.pos[1] + 2.0, nearestUnlit.pos[2]);
-        targetVec.project(camera);
-        const isBehind = targetVec.z > 1.0;
-        const ndcX = isBehind ? -targetVec.x : targetVec.x;
-        const ndcY = isBehind ? -targetVec.y : targetVec.y;
+      // Offscreen arrow for nearest unlit lantern
+      const lanternArrow = document.getElementById('offscreen-arrow');
+      if (nearestUnlit) positionEdgeArrow(lanternArrow, nearestUnlit.pos);
+      else lanternArrow.classList.add('hidden');
 
-        if (isBehind || Math.abs(ndcX) > 0.92 || Math.abs(ndcY) > 0.92) {
-          arrowEl.classList.remove('hidden');
-          const angle = Math.atan2(-ndcY, ndcX);
-          const halfW = window.innerWidth / 2 - 48;
-          const halfH = window.innerHeight / 2 - 48;
-          const edgeX = window.innerWidth / 2 + Math.cos(angle) * Math.min(halfW, halfH * 1.3);
-          const edgeY = window.innerHeight / 2 + Math.sin(angle) * Math.min(halfH, halfW);
-          arrowEl.style.left = `${edgeX - 22}px`;
-          arrowEl.style.top = `${edgeY - 22}px`;
-          arrowEl.style.transform = `rotate(${(angle * 180) / Math.PI}deg)`;
-        } else {
-          arrowEl.classList.add('hidden');
+      // Offscreen arrow for newly spawned or nearest active Shade
+      const shadeArrow = document.getElementById('shade-arrow');
+      let shadeTargetPos = null;
+      if (lastSpawnedShadePos && Date.now() < lastSpawnedShadeUntil) {
+        shadeTargetPos = lastSpawnedShadePos;
+      } else if (engine.shades.length > 0) {
+        let bestS = null, bestD = Infinity;
+        for (const s of engine.shades) {
+          const d = Math.hypot(s.pos[0] - engine.player.pos[0], s.pos[2] - engine.player.pos[2]);
+          if (d < bestD) { bestD = d; bestS = s; }
         }
-      } else {
-        arrowEl.classList.add('hidden');
+        if (bestS && bestD <= 18.0) shadeTargetPos = bestS.pos;
       }
+      if (shadeTargetPos) positionEdgeArrow(shadeArrow, shadeTargetPos);
+      else shadeArrow.classList.add('hidden');
+
+      renderSubtitles();
     }
   </script>
 </body>

@@ -5,7 +5,9 @@
   "main": "src/headless.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/run_tests.js"
+    "test": "node tests/run_tests.js",
+    "bench": "node src/bench.js --seed 42 --duration 30 --out bench.json",
+    "soak": "node src/soak.js --seed 7 --nights 10 --out soak.json"
   },
   "dependencies": {},
   "devDependencies": {}

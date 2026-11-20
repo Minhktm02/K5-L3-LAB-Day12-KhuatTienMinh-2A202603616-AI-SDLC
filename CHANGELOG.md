@@ -1,5 +1,19 @@
 # Changelog
 
+## [v1.0.0 — Phase 4] Ticket-04 "Bình minh: phát hành v1.0.0" — Contract v1.3
+
+### Added
+- **Benchmark mode (`node src/bench.js`):** Launches non-fullscreen 1280×720 Chromium/Edge window with vsync disabled (`--disable-gpu-vsync --disable-frame-rate-limit`), loads Night 1 with 200 wandering Shades, 100 Motes, L1–L3 lit at 100 fuel, 30m/15m orbital camera (15s/rev CCW), 3s warmup + `--duration` measurement, outputs Contract v1.3 `bench.json`.
+- **Soak test (`node src/soak.js`):** Runs 10 consecutive headless Nights cycling Night 1 → 2 → 3 with deterministic seeded random inputs, checks zero crashes and `mem_end_mb <= 1.2 * mem_start_mb`, outputs `soak.json`.
+- **Local Leaderboard (`src/leaderboard.js` & `server.js`):** Persistent disk storage (`data/leaderboard.json`), name validation (3–12 chars `[A-Za-z0-9_]` + Vietnamese letters), top 10 sorted by score desc / earlier `achieved_at` tie-break, Main Menu Leaderboard screen, end-of-run submission form, and CLI export `node server.js --export-leaderboard out.json`.
+- **Accessibility:**
+  - Full key rebinding for all 9 actions with duplicate detection, warning, default reset, and persistence.
+  - Visual subtitles/alerts for Shade spawn (+ screen-edge directional arrow), wind warning, last 10s countdown, and low-fuel lanterns (< 30).
+  - Reduce Motion setting disabling camera shake, screen flash, and CSS blink animations.
+  - Minimum 18px UI font size at 1280×720 plus Large Text (`×1.25`) toggle.
+- **Packaging & Docs:** Bundled Three.js r128 locally (`public/lib/three.min.js`), switched Shades & Motes to `THREE.InstancedMesh` (2 draw calls), added MIT `LICENSE`, updated `README.md`, `CREDITS.md`, `docs/retro.md`, `docs/notes/spec_phase4.md`, and `docs/proof/phase-4/verification.md`.
+- **Contract v1.3:** Updated `game.contract.json` (`contract_version: "1.3"`, `run_cmd: "node server.js"`, `bench_cmd`, `soak_cmd`). Added tests 18–19 (19/19 passing).
+
 ## [Phase 3] Ticket-03 "Đèn cạn dầu" — Contract v1.2
 
 ### Breaking changes (replaced rules)
