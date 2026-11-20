@@ -1,0 +1,12 @@
+{
+  "name": "dao-den-long",
+  "version": "1.0.0",
+  "description": "Game 3D Đảo Đèn Lồng - Lantern Island",
+  "main": "src/headless.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run_tests.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
