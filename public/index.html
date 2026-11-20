@@ -1052,8 +1052,8 @@
         let mx = 0, mz = 0;
         if (keys['w'] || keys['arrowup']) mz += 1;
         if (keys['s'] || keys['arrowdown']) mz -= 1;
-        if (keys['a'] || keys['arrowleft']) mx -= 1;
-        if (keys['d'] || keys['arrowright']) mx += 1;
+        if (keys['a'] || keys['arrowleft']) mx += 1;
+        if (keys['d'] || keys['arrowright']) mx -= 1;
 
         const jump = !!keys[' '];
         const interact = !!keys['e'];
