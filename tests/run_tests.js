@@ -98,6 +98,12 @@ run('--seed 42 --night 3 --scenario tests/scenarios/night3_tier_scenario.json --
 const n3 = readJsonl(path.resolve(proofDir, 'night3_tier.jsonl')).filter(r => r.type === 'snapshot').pop();
 assert.strictEqual(n3.player.pos[1], 6);
 assert.strictEqual(n3.player.grounded, true);
+// Verify Night 3 default spawn stands safely on Tier 0 without falling
+const eN3Spawn = new GameEngine(contract, 42, 3);
+for (let i = 0; i < 120; i++) eN3Spawn.step({});
+assert.strictEqual(eN3Spawn.player.flames, 3, 'Night 3 default spawn must not fall off');
+assert.strictEqual(eN3Spawn.player.grounded, true);
+assert.strictEqual(eN3Spawn.player.pos[1], 0);
 console.log('✓ Jump pads verified.');
 
 // 8. Pause

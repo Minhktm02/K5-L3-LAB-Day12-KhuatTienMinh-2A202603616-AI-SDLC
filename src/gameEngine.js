@@ -32,8 +32,9 @@ class GameEngine {
     this.time_ticks_left = Math.round(this.time_left_s * 60);
 
     // Player state
+    const spawnPos = this.getSpawnPoint();
     this.player = {
-      pos: [0.0, 0.0, 0.0],
+      pos: spawnPos,
       vel: [0.0, 0.0, 0.0],
       facing: [0.0, 1.0], // Facing +Z initially
       grounded: true,
@@ -89,6 +90,13 @@ class GameEngine {
     this.successful_lights = 0;
 
     this.setupMapForNight(this.night);
+  }
+
+  getSpawnPoint() {
+    // Night 3 center (0,0,0) is occupied by Tier 2 (Y=6) and the Bell Tower (r=2m),
+    // so start and respawn on Tier 0 at (0, 0, -20) facing the tower (+Z).
+    if (this.night === 3) return [0.0, 0.0, -20.0];
+    return [0.0, 0.0, 0.0];
   }
 
   getCapacity() {
@@ -611,7 +619,7 @@ class GameEngine {
     if (this.player.respawn_ticks > 0) {
       this.player.respawn_ticks--;
       if (this.player.respawn_ticks === 0) {
-        this.player.pos = [0.0, 0.0, 0.0];
+        this.player.pos = this.getSpawnPoint();
         this.player.vel = [0.0, 0.0, 0.0];
         this.player.facing = [0.0, 1.0];
         this.player.grounded = true;
