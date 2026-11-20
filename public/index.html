@@ -628,8 +628,11 @@
     let keys = {};
     let prevInputButtons = { jump: false, interact: false, pulse: false, dash: false, pause: false };
     let camYaw = 0;
+    let camPitch = 25;
+    let isPointerLocked = false;
     let isMouseDown = false;
-    let prevMouseX = 0;
+    let prevMouseX = null;
+    let prevMouseY = null;
 
     // Build Mote Bar 10 slots
     const moteBarEl = document.getElementById('mote-bar');
@@ -654,6 +657,8 @@
       scene.fog = new THREE.FogExp2(0x1B2350, 0.012);
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 5.5, -10);
+      camera.lookAt(0, 1.2, 0);
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.enabled = true;
@@ -703,48 +708,52 @@
       window.addEventListener('keyup', e => {
         keys[e.key.toLowerCase()] = false;
       });
-    // Pointer Lock & Mouse Look
-    let isPointerLocked = false;
-    let camPitch = 20; // vertical angle in degrees
-
-    function requestGamePointerLock() {
-      const el = renderer.domElement;
-      if (document.pointerLockElement !== el) {
-        el.requestPointerLock();
-      }
-    }
-
-    document.addEventListener('pointerlockchange', () => {
-      isPointerLocked = document.pointerLockElement === renderer.domElement;
-    });
-
-    window.addEventListener('mousedown', e => {
-      // If clicking inside canvas while playing, lock pointer
-      if (engine && engine.state === 'playing' && !engine.is_paused) {
-        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
-          requestGamePointerLock();
+      function requestGamePointerLock() {
+        const el = renderer.domElement;
+        if (document.pointerLockElement !== el && el.requestPointerLock) {
+          try { el.requestPointerLock(); } catch (err) {}
         }
       }
-      isMouseDown = true;
-      prevMouseX = e.clientX;
-    });
 
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
+      document.addEventListener('pointerlockchange', () => {
+        isPointerLocked = document.pointerLockElement === renderer.domElement;
+      });
 
-    window.addEventListener('mousemove', e => {
-      if (isPointerLocked) {
-        // Direct FPS / TPS free mouse look without dragging
-        const dx = e.movementX || 0;
-        const dy = e.movementY || 0;
-        camYaw -= dx * 0.22 * userSettings.sensitivity;
-        camPitch = Math.max(5, Math.min(65, camPitch + dy * 0.18 * userSettings.sensitivity));
-      } else if (isMouseDown) {
-        // Drag fallback
-        const dx = e.clientX - prevMouseX;
-        camYaw -= dx * 0.35 * userSettings.sensitivity;
+      window.addEventListener('mousedown', e => {
+        if (engine && engine.state === 'playing' && !engine.is_paused) {
+          if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+            requestGamePointerLock();
+          }
+        }
+        isMouseDown = true;
         prevMouseX = e.clientX;
-      }
-    });
+        prevMouseY = e.clientY;
+      });
+
+      window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+      window.addEventListener('mousemove', e => {
+        if (!engine || engine.state !== 'playing' || engine.is_paused) {
+          prevMouseX = e.clientX;
+          prevMouseY = e.clientY;
+          return;
+        }
+        let dx = 0;
+        let dy = 0;
+        if (isPointerLocked) {
+          dx = e.movementX || 0;
+          dy = e.movementY || 0;
+        } else {
+          if (prevMouseX !== null && prevMouseY !== null) {
+            dx = e.clientX - prevMouseX;
+            dy = e.clientY - prevMouseY;
+          }
+          prevMouseX = e.clientX;
+          prevMouseY = e.clientY;
+        }
+        camYaw -= dx * 0.28 * userSettings.sensitivity;
+        camPitch = Math.max(8, Math.min(65, camPitch + dy * 0.2 * userSettings.sensitivity));
+      });
 
       requestAnimationFrame(gameLoop);
     }
@@ -966,6 +975,9 @@
       engine = new GameEngine(contract, Date.now() & 0xffffffff, currentNight);
       engine.initDefaultWorld();
       camYaw = 0;
+      camPitch = 25;
+      prevMouseX = null;
+      prevMouseY = null;
       lastCountdownSec = -1;
       buildNight3DMap(currentNight);
     }
@@ -974,6 +986,9 @@
       if (!engine) return;
       engine.step({ pause: true });
       if (engine.is_paused) {
+        if (document.pointerLockElement && document.exitPointerLock) {
+          try { document.exitPointerLock(); } catch (err) {}
+        }
         document.getElementById('screen-pause').classList.remove('hidden');
       } else {
         document.getElementById('screen-pause').classList.add('hidden');
@@ -1039,6 +1054,9 @@
     }
 
     function handleGameOver() {
+      if (document.pointerLockElement && document.exitPointerLock) {
+        try { document.exitPointerLock(); } catch (err) {}
+      }
       const won = engine.state === 'won';
       document.getElementById('hud').classList.add('hidden');
       document.getElementById('offscreen-arrow').classList.add('hidden');
